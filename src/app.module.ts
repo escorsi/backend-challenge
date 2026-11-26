@@ -1,6 +1,7 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import { AuthModule } from './auth/auth.module';
+import { ProductsModule } from './products/products.module';
 import { validateEnv } from './config/env.validation';
 
 @Module({
@@ -10,7 +11,8 @@ import { validateEnv } from './config/env.validation';
       envFilePath: '.env',
       validate: validateEnv,
     }),
-    AuthModule
+    AuthModule,
+    ProductsModule
   ],
   controllers: [],
   providers: [],
