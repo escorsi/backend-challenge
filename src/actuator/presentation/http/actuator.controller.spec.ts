@@ -25,10 +25,7 @@ describe('ActuatorController', () => {
       setHeader: vi.fn(),
       send: vi.fn(),
     } as unknown as Response;
-    const controller = new ActuatorController(
-      {} as never,
-      metricsService,
-    );
+    const controller = new ActuatorController({} as never, metricsService);
 
     await controller.prometheus(response);
 

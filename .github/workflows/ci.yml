@@ -1,0 +1,59 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    name: Validate
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+      - run: npm ci
+      - run: npm run validate
+
+  integration:
+    name: Integration tests
+    runs-on: ubuntu-latest
+    services:
+      dynamodb-local:
+        image: amazon/dynamodb-local:latest
+        ports:
+          - 8000:8000
+      redis:
+        image: redis:7-alpine
+        ports:
+          - 6379:6379
+    env:
+      AWS_REGION: us-east-1
+      DYNAMODB_ENDPOINT: http://localhost:8000
+      REDIS_URL: redis://localhost:6379
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+      - run: npm ci
+      - name: Wait for DynamoDB Local
+        run: |
+          for attempt in {1..30}; do
+            status=$(curl --silent --output /dev/null --write-out '%{http_code}' \
+              --request POST http://localhost:8000/ \
+              --header 'Content-Type: application/x-amz-json-1.0' \
+              --header 'X-Amz-Target: DynamoDB_20120810.ListTables' \
+              --data '{}')
+            if [ "$status" = "200" ]; then exit 0; fi
+            sleep 2
+          done
+          echo 'DynamoDB Local did not become ready.'
+          exit 1
+      - run: npm run test:integration
