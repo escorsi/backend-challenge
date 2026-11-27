@@ -7,9 +7,7 @@ const envSchema = z
       .default('development'),
 
     PORT: z.coerce.number().int().positive().default(3000),
-    REDIS_URL: z
-      .url({ protocol: /^rediss?$/ })
-      .default('redis://localhost:6379'),
+    REDIS_URL: z.url({ protocol: /^rediss?$/ }).optional(),
     TRUSTED_PROXY_CIDRS: z.string().default(''),
     METRICS_BEARER_TOKEN: z.string().min(32).optional(),
 
@@ -26,6 +24,14 @@ const envSchema = z
     CURSOR_SECRET: z.string().min(32),
   })
   .superRefine((config, context) => {
+    if (config.NODE_ENV === 'production' && !config.REDIS_URL) {
+      context.addIssue({
+        code: 'custom',
+        path: ['REDIS_URL'],
+        message: 'REDIS_URL is required in production',
+      });
+    }
+
     if (config.NODE_ENV === 'production' && !config.METRICS_BEARER_TOKEN) {
       context.addIssue({
         code: 'custom',
@@ -36,5 +42,10 @@ const envSchema = z
   });
 
 export function validateEnv(config: Record<string, unknown>) {
-  return envSchema.parse(config);
+  const validatedConfig = envSchema.parse(config);
+
+  return {
+    ...validatedConfig,
+    REDIS_URL: validatedConfig.REDIS_URL ?? 'redis://localhost:6379',
+  };
 }

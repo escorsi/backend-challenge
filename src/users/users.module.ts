@@ -15,9 +15,14 @@ import { ID_GENERATOR } from '../shared/application/ports/id-generator.port';
 import type { Clock } from '../shared/application/ports/clock.port';
 import type { IdGenerator } from '../shared/application/ports/id-generator.port';
 import { AUTH_USER_READER } from '../auth/application/ports/auth-user-reader.port';
+import {
+  APPLICATION_LOGGER_FACTORY,
+  type ApplicationLoggerFactory,
+} from '../shared/application/ports/application-logger.port';
+import { LoggingModule } from '../shared/infrastructure/logging/logging.module';
 
 @Module({
-  imports: [DynamoDBModule, SecurityModule, SystemModule],
+  imports: [DynamoDBModule, SecurityModule, SystemModule, LoggingModule],
   controllers: [UsersController],
   providers: [
     UsersRepository,
@@ -25,13 +30,27 @@ import { AUTH_USER_READER } from '../auth/application/ports/auth-user-reader.por
     { provide: USERS_WRITER, useExisting: UsersRepository },
     {
       provide: CreateUserService,
-      inject: [USERS_WRITER, PASSWORD_HASHER, ID_GENERATOR, CLOCK],
+      inject: [
+        USERS_WRITER,
+        PASSWORD_HASHER,
+        ID_GENERATOR,
+        CLOCK,
+        APPLICATION_LOGGER_FACTORY,
+      ],
       useFactory: (
         writer: UsersWriter,
         passwordHasher: PasswordHasher,
         idGenerator: IdGenerator,
         clock: Clock,
-      ) => new CreateUserService(writer, passwordHasher, idGenerator, clock),
+        loggerFactory: ApplicationLoggerFactory,
+      ) =>
+        new CreateUserService(
+          writer,
+          passwordHasher,
+          idGenerator,
+          clock,
+          loggerFactory,
+        ),
     },
   ],
   exports: [AUTH_USER_READER],

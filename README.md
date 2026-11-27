@@ -4,7 +4,7 @@ REST API built with NestJS for user registration, authentication and product man
 
 ## Requirements
 
-- Node.js `20.19+` or `22.12+` (Vite 8 requirement)
+- Node.js `22.22.3+`, `24.15+` or `26+` (supported by the locked Nest CLI toolchain)
 - npm
 - Docker Compose
 
@@ -57,6 +57,8 @@ Product listing supports `pageSize`, `cursor`, `sortBy` (`createdAt`, `name` or 
 Public registration intentionally does not require authentication. The request schema rejects additional fields such as `role`, and the application always assigns `USER` on the server. Product creation remains restricted to `ADMIN`.
 
 The default rate limits are stored in Redis: a global limit is applied by client IP, with stricter limits for login and registration and a per-authenticated-user limit for product routes. Configure `TRUSTED_PROXY_CIDRS` only for proxy addresses you control.
+
+Application logs are structured JSON with the originating class, a descriptive message and the request ID when running inside an HTTP request. Common secret formats are redacted centrally. Keep messages static and do not pass request bodies, credentials, tokens, exception messages or other user data to the logger.
 
 ## Configuration
 

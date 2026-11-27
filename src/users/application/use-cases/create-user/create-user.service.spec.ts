@@ -5,6 +5,10 @@ import type { UsersWriter } from '../../ports/users-writer.port';
 import type { PasswordHasher } from '../../../../security/password-hasher.port';
 import type { Clock } from '../../../../shared/application/ports/clock.port';
 import type { IdGenerator } from '../../../../shared/application/ports/id-generator.port';
+import type {
+  ApplicationLogger,
+  ApplicationLoggerFactory,
+} from '../../../../shared/application/ports/application-logger.port';
 
 describe('CreateUserService', () => {
   let service: CreateUserService;
@@ -12,6 +16,8 @@ describe('CreateUserService', () => {
   let passwordHasher: PasswordHasher;
   let idGenerator: IdGenerator;
   let clock: Clock;
+  let logger: ApplicationLogger;
+  let loggerFactory: ApplicationLoggerFactory;
 
   beforeEach(() => {
     vi.clearAllMocks();
@@ -24,11 +30,14 @@ describe('CreateUserService', () => {
     clock = {
       now: vi.fn().mockReturnValue(new Date('2026-11-26T12:00:00.000Z')),
     };
+    logger = { info: vi.fn(), warn: vi.fn(), error: vi.fn() };
+    loggerFactory = { create: vi.fn().mockReturnValue(logger) };
     service = new CreateUserService(
       usersWriter,
       passwordHasher,
       idGenerator,
       clock,
+      loggerFactory,
     );
   });
 
@@ -51,5 +60,13 @@ describe('CreateUserService', () => {
     });
     expect(result).toEqual({ message: 'Registration request processed.' });
     expect(result).not.toHaveProperty('passwordHash');
+    expect(loggerFactory.create).toHaveBeenCalledWith('CreateUserService');
+    expect(logger.info).toHaveBeenCalledWith('User registration processed');
+    expect(JSON.stringify(vi.mocked(logger.info).mock.calls)).not.toContain(
+      'new@example.com',
+    );
+    expect(JSON.stringify(vi.mocked(logger.info).mock.calls)).not.toContain(
+      'hashed-password',
+    );
   });
 });

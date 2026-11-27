@@ -1,9 +1,4 @@
-import {
-  ArgumentsHost,
-  HttpException,
-  HttpStatus,
-  Logger,
-} from '@nestjs/common';
+import { ArgumentsHost, HttpException, HttpStatus } from '@nestjs/common';
 import { Request, Response } from 'express';
 
 import { HttpExceptionFilter } from './http-exception.filter';
@@ -11,6 +6,10 @@ import { InvalidCredentialsError } from '../../auth/application/errors/invalid-c
 import { InvalidProductCursorError } from '../../products/application/errors/invalid-product-cursor.error';
 import { ApplicationError } from '../../shared/application/errors/application.error';
 import { ApplicationErrorCode } from '../../shared/application/errors/application-error-code.enum';
+import type {
+  ApplicationLogger,
+  ApplicationLoggerFactory,
+} from '../../shared/application/ports/application-logger.port';
 
 class UnmappedApplicationError extends ApplicationError {
   constructor() {
@@ -20,6 +19,8 @@ class UnmappedApplicationError extends ApplicationError {
 
 describe('HttpExceptionFilter', () => {
   let filter: HttpExceptionFilter;
+  let logger: ApplicationLogger;
+  let loggerFactory: ApplicationLoggerFactory;
 
   let jsonMock: ReturnType<typeof vi.fn>;
   let statusMock: ReturnType<typeof vi.fn>;
@@ -28,7 +29,9 @@ describe('HttpExceptionFilter', () => {
   let request: Request;
 
   beforeEach(() => {
-    filter = new HttpExceptionFilter();
+    logger = { info: vi.fn(), warn: vi.fn(), error: vi.fn() };
+    loggerFactory = { create: vi.fn().mockReturnValue(logger) };
+    filter = new HttpExceptionFilter(loggerFactory);
 
     jsonMock = vi.fn();
 
@@ -124,23 +127,21 @@ describe('HttpExceptionFilter', () => {
   it('should omit exception details and query parameters from error logs', () => {
     request.url = '/v1/users?token=query-secret';
     request.route = { path: '/v1/users' } as Request['route'];
-    const loggerSpy = vi
-      .spyOn(Logger.prototype, 'error')
-      .mockImplementation(() => undefined);
-
     filter.catch(
       new Error('Database password=exception-secret'),
       createArgumentsHost(),
     );
 
-    expect(loggerSpy).toHaveBeenCalledWith(
-      'HTTP 500 GET /v1/users INTERNAL_SERVER_ERROR requestId=test-request-id',
+    expect(loggerFactory.create).toHaveBeenCalledWith('HttpExceptionFilter');
+    expect(logger.error).toHaveBeenCalledWith(
+      'HTTP request failed (500 INTERNAL_SERVER_ERROR)',
     );
-    expect(JSON.stringify(loggerSpy.mock.calls)).not.toContain('query-secret');
-    expect(JSON.stringify(loggerSpy.mock.calls)).not.toContain(
+    expect(JSON.stringify(vi.mocked(logger.error).mock.calls)).not.toContain(
+      'query-secret',
+    );
+    expect(JSON.stringify(vi.mocked(logger.error).mock.calls)).not.toContain(
       'exception-secret',
     );
-    loggerSpy.mockRestore();
   });
 
   it('should include timestamp, request path and request ID', () => {
@@ -187,11 +188,8 @@ describe('HttpExceptionFilter', () => {
     );
   });
 
-  it('should use safe fallbacks for unmapped HTTP errors and unmatched routes', () => {
+  it('should use safe fallbacks for unmapped HTTP errors', () => {
     request.route = undefined as Request['route'];
-    const loggerSpy = vi
-      .spyOn(Logger.prototype, 'warn')
-      .mockImplementation(() => undefined);
     const exception = new HttpException(
       { error: 'Unprocessable Entity' },
       HttpStatus.UNPROCESSABLE_ENTITY,
@@ -206,10 +204,9 @@ describe('HttpExceptionFilter', () => {
         message: 'Request failed',
       }),
     );
-    expect(loggerSpy).toHaveBeenCalledWith(
-      'HTTP 422 GET unmatched HTTP_ERROR requestId=test-request-id',
+    expect(logger.warn).toHaveBeenCalledWith(
+      'HTTP request failed (422 HTTP_ERROR)',
     );
-    loggerSpy.mockRestore();
   });
 
   it('should hide details for application errors without an HTTP mapping', () => {

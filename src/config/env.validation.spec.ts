@@ -70,7 +70,21 @@ describe('validateEnv', () => {
 
   it('requires a metrics bearer token in production', () => {
     expect(() =>
-      validateEnv({ ...requiredSecrets, NODE_ENV: 'production' }),
+      validateEnv({
+        ...requiredSecrets,
+        NODE_ENV: 'production',
+        REDIS_URL: 'redis://cache.internal:6379',
+      }),
     ).toThrow();
+  });
+
+  it('requires Redis to be explicitly configured in production', () => {
+    expect(() =>
+      validateEnv({
+        ...requiredSecrets,
+        NODE_ENV: 'production',
+        METRICS_BEARER_TOKEN: 'a-metrics-token-with-at-least-32-characters',
+      }),
+    ).toThrow('REDIS_URL is required in production');
   });
 });

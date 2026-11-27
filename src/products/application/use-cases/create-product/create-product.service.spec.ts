@@ -4,12 +4,18 @@ import type { ProductsWriterPort } from '../../ports/products-writer.port';
 import { ProductStatus } from '../../../domain/enums/product-status.enum';
 import type { Clock } from '../../../../shared/application/ports/clock.port';
 import type { IdGenerator } from '../../../../shared/application/ports/id-generator.port';
+import type {
+  ApplicationLogger,
+  ApplicationLoggerFactory,
+} from '../../../../shared/application/ports/application-logger.port';
 
 describe('CreateProductService', () => {
   let service: CreateProductService;
   let writer: ProductsWriterPort;
   let idGenerator: IdGenerator;
   let clock: Clock;
+  let logger: ApplicationLogger;
+  let loggerFactory: ApplicationLoggerFactory;
 
   beforeEach(() => {
     writer = {
@@ -19,7 +25,14 @@ describe('CreateProductService', () => {
     clock = {
       now: vi.fn().mockReturnValue(new Date('2026-11-26T12:00:00.000Z')),
     };
-    service = new CreateProductService(writer, idGenerator, clock);
+    logger = { info: vi.fn(), warn: vi.fn(), error: vi.fn() };
+    loggerFactory = { create: vi.fn().mockReturnValue(logger) };
+    service = new CreateProductService(
+      writer,
+      idGenerator,
+      clock,
+      loggerFactory,
+    );
   });
 
   it('creates active products with a generated id and creation timestamp', async () => {
@@ -43,5 +56,10 @@ describe('CreateProductService', () => {
       status: ProductStatus.ACTIVE,
       createdAt: '2026-11-26T12:00:00.000Z',
     });
+    expect(loggerFactory.create).toHaveBeenCalledWith('CreateProductService');
+    expect(logger.info).toHaveBeenCalledWith('Product created successfully');
+    expect(JSON.stringify(vi.mocked(logger.info).mock.calls)).not.toContain(
+      'Headphones',
+    );
   });
 });

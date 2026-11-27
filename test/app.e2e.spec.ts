@@ -266,8 +266,23 @@ describe('API E2E', () => {
   });
 
   describe('GET /v1/products', () => {
-    it('should reject requests without an access token', async () => {
-      await request(app.getHttpServer()).get('/v1/products').expect(401);
+    it('returns a unique request ID in the response header and error body', async () => {
+      const firstResponse = await request(app.getHttpServer())
+        .get('/v1/products')
+        .expect(401);
+      const secondResponse = await request(app.getHttpServer())
+        .get('/v1/products')
+        .expect(401);
+
+      expect(firstResponse.headers['x-request-id']).toBe(
+        firstResponse.body.requestId,
+      );
+      expect(secondResponse.headers['x-request-id']).toBe(
+        secondResponse.body.requestId,
+      );
+      expect(firstResponse.body.requestId).not.toBe(
+        secondResponse.body.requestId,
+      );
     });
 
     it('should return products with a valid access token', async () => {

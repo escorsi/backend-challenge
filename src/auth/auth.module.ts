@@ -18,12 +18,18 @@ import type { PasswordHasher } from '../security/password-hasher.port';
 import type { AccessTokenIssuer } from './application/ports/access-token-issuer.port';
 import type { AuthUserReader } from './application/ports/auth-user-reader.port';
 import { AUTH_USER_READER } from './application/ports/auth-user-reader.port';
+import {
+  APPLICATION_LOGGER_FACTORY,
+  type ApplicationLoggerFactory,
+} from '../shared/application/ports/application-logger.port';
+import { LoggingModule } from '../shared/infrastructure/logging/logging.module';
 
 @Module({
   imports: [
     UsersModule,
     PassportModule,
     SecurityModule,
+    LoggingModule,
     JwtModule.registerAsync({
       inject: [ConfigService],
       useFactory: (configService: ConfigService) => ({
@@ -47,12 +53,24 @@ import { AUTH_USER_READER } from './application/ports/auth-user-reader.port';
     },
     {
       provide: AuthService,
-      inject: [AUTH_USER_READER, ACCESS_TOKEN_ISSUER, PASSWORD_HASHER],
+      inject: [
+        AUTH_USER_READER,
+        ACCESS_TOKEN_ISSUER,
+        PASSWORD_HASHER,
+        APPLICATION_LOGGER_FACTORY,
+      ],
       useFactory: (
         usersReader: AuthUserReader,
         tokenIssuer: AccessTokenIssuer,
         passwordHasher: PasswordHasher,
-      ) => new AuthService(usersReader, tokenIssuer, passwordHasher),
+        loggerFactory: ApplicationLoggerFactory,
+      ) =>
+        new AuthService(
+          usersReader,
+          tokenIssuer,
+          passwordHasher,
+          loggerFactory,
+        ),
     },
     JwtStrategy,
     JwtAuthGuard,

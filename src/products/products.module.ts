@@ -22,9 +22,20 @@ import type { IdGenerator } from '../shared/application/ports/id-generator.port'
 import { ProductsReaderAdapter } from './infrastructure/dynamodb/products-reader.adapter';
 import { ProductsWriterAdapter } from './infrastructure/dynamodb/products-writer.adapter';
 import { ProductCursorManager } from './infrastructure/dynamodb/product-cursor.manager';
+import {
+  APPLICATION_LOGGER_FACTORY,
+  type ApplicationLoggerFactory,
+} from '../shared/application/ports/application-logger.port';
+import { LoggingModule } from '../shared/infrastructure/logging/logging.module';
 
 @Module({
-  imports: [AuthModule, DynamoDBModule, RateLimitModule, SystemModule],
+  imports: [
+    AuthModule,
+    DynamoDBModule,
+    RateLimitModule,
+    SystemModule,
+    LoggingModule,
+  ],
   controllers: [ProductsController],
   providers: [
     ProductCursorManager,
@@ -45,12 +56,18 @@ import { ProductCursorManager } from './infrastructure/dynamodb/product-cursor.m
     },
     {
       provide: CreateProductService,
-      inject: [PRODUCTS_WRITER, ID_GENERATOR, CLOCK],
+      inject: [
+        PRODUCTS_WRITER,
+        ID_GENERATOR,
+        CLOCK,
+        APPLICATION_LOGGER_FACTORY,
+      ],
       useFactory: (
         writer: ProductsWriterPort,
         idGenerator: IdGenerator,
         clock: Clock,
-      ) => new CreateProductService(writer, idGenerator, clock),
+        loggerFactory: ApplicationLoggerFactory,
+      ) => new CreateProductService(writer, idGenerator, clock, loggerFactory),
     },
     RolesGuard,
   ],

@@ -6,12 +6,18 @@ import { AuthService } from './auth.service';
 import type { AccessTokenIssuer } from '../ports/access-token-issuer.port';
 import { InvalidCredentialsError } from '../errors/invalid-credentials.error';
 import { UserRole } from '../../../shared/domain/enums/user-role.enum';
+import type {
+  ApplicationLogger,
+  ApplicationLoggerFactory,
+} from '../../../shared/application/ports/application-logger.port';
 
 describe('AuthService', () => {
   let authService: AuthService;
   let usersRepository: AuthUserReader;
   let tokenIssuer: AccessTokenIssuer;
   let passwordHasher: PasswordHasher;
+  let logger: ApplicationLogger;
+  let loggerFactory: ApplicationLoggerFactory;
 
   const user = {
     id: 'user-123',
@@ -38,8 +44,15 @@ describe('AuthService', () => {
       hash: vi.fn(),
       verify: vi.fn(),
     };
+    logger = { info: vi.fn(), warn: vi.fn(), error: vi.fn() };
+    loggerFactory = { create: vi.fn().mockReturnValue(logger) };
 
-    authService = new AuthService(usersRepository, tokenIssuer, passwordHasher);
+    authService = new AuthService(
+      usersRepository,
+      tokenIssuer,
+      passwordHasher,
+      loggerFactory,
+    );
   });
 
   describe('login', () => {
@@ -73,6 +86,11 @@ describe('AuthService', () => {
         tokenType: 'Bearer',
         expiresIn: 900,
       });
+      expect(loggerFactory.create).toHaveBeenCalledWith('AuthService');
+      expect(logger.info).toHaveBeenCalledWith('Authentication succeeded');
+      expect(JSON.stringify(vi.mocked(logger.info).mock.calls)).not.toContain(
+        'admin@example.com',
+      );
     });
 
     it('should normalize the email before searching', async () => {

@@ -4,13 +4,16 @@ import {
   ExceptionFilter,
   HttpException,
   HttpStatus,
-  Logger,
 } from '@nestjs/common';
 import { Request, Response } from 'express';
 
 import { ApiErrorResponse } from '../interfaces/api-error-response.interface';
 import { ApplicationErrorCode } from '../../shared/application/errors/application-error-code.enum';
 import { ApplicationError } from '../../shared/application/errors/application.error';
+import {
+  type ApplicationLogger,
+  type ApplicationLoggerFactory,
+} from '../../shared/application/ports/application-logger.port';
 
 const APPLICATION_ERROR_HTTP_STATUS: Record<ApplicationErrorCode, number> = {
   [ApplicationErrorCode.INVALID_CREDENTIALS]: HttpStatus.UNAUTHORIZED,
@@ -19,7 +22,11 @@ const APPLICATION_ERROR_HTTP_STATUS: Record<ApplicationErrorCode, number> = {
 
 @Catch()
 export class HttpExceptionFilter implements ExceptionFilter {
-  private readonly logger = new Logger(HttpExceptionFilter.name);
+  private readonly logger: ApplicationLogger;
+
+  constructor(loggerFactory: ApplicationLoggerFactory) {
+    this.logger = loggerFactory.create(HttpExceptionFilter.name);
+  }
 
   catch(exception: unknown, host: ArgumentsHost): void {
     const ctx = host.switchToHttp();
@@ -42,17 +49,14 @@ export class HttpExceptionFilter implements ExceptionFilter {
       applicationErrorStatus !== undefined,
     );
     const code = this.getErrorCode(statusCode);
-    const routePath = request.route?.path;
-    const route = typeof routePath === 'string' ? routePath : 'unmatched';
     const requestId = request.requestId ?? 'unknown';
-    const safeLogMessage =
-      `HTTP ${statusCode} ${request.method} ${route} ${code} ` +
-      `requestId=${requestId}`;
+
+    const logMessage = `HTTP request failed (${statusCode} ${code})`;
 
     if (statusCode >= HttpStatus.INTERNAL_SERVER_ERROR) {
-      this.logger.error(safeLogMessage);
+      this.logger.error(logMessage);
     } else {
-      this.logger.warn(safeLogMessage);
+      this.logger.warn(logMessage);
     }
 
     const errorResponse: ApiErrorResponse = {
