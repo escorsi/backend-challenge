@@ -6,8 +6,8 @@ import {
 } from '@aws-sdk/lib-dynamodb';
 import { ConfigService } from '@nestjs/config';
 
-import { UserRole } from '../../../shared/domain/enums/user-role.enum';
-import type { User } from '../../domain/models/user.interface';
+import { UserRole } from '@/shared/domain/enums/user-role.enum';
+import type { User } from '@/users/domain/models/user.interface';
 import { UsersRepository } from './users.repository';
 
 describe('UsersRepository', () => {

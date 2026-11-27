@@ -4,13 +4,13 @@ import { ApiBody, ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
 
 import { Throttle } from '@nestjs/throttler';
 
-import { AuthService } from '../../application/login/auth.service';
+import { AuthService } from '@/auth/application/login/auth.service';
 import { loginSchema } from './schemas/login.schema';
 import type { LoginDto } from './schemas/login.schema';
-import { ZodValidationPipe } from '../../../common/pipes/zod-validation.pipe';
+import { ZodValidationPipe } from '@/common/pipes/zod-validation.pipe';
 import { LoginRequestDto } from './dto/login-request.dto';
 import { LoginResponseDto } from './dto/login-response.dto';
-import { ApiErrorResponses } from '../../../common/decorators/api-error-responses.decorator';
+import { ApiErrorResponses } from '@/common/decorators/api-error-responses.decorator';
 
 @ApiTags('Authentication')
 @Controller('auth')

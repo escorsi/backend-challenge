@@ -1,7 +1,7 @@
 import { DynamoDBClient } from '@aws-sdk/client-dynamodb';
 import { DynamoDBDocumentClient } from '@aws-sdk/lib-dynamodb';
 
-import { backfillProductNames } from '../src/products/infrastructure/dynamodb/migrations/backfill-product-names';
+import { backfillProductNames } from '@/products/infrastructure/dynamodb/migrations/backfill-product-names';
 
 const integration = process.argv.includes('--integration');
 const dryRun = !process.argv.includes('--apply');

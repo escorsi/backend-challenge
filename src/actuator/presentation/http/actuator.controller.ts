@@ -3,7 +3,7 @@ import { HealthCheck, HealthCheckService } from '@nestjs/terminus';
 import { SkipThrottle } from '@nestjs/throttler';
 import type { Response } from 'express';
 
-import { PrometheusMetricsService } from '../../infrastructure/metrics/prometheus-metrics.service';
+import { PrometheusMetricsService } from '@/actuator/infrastructure/metrics/prometheus-metrics.service';
 import { MetricsAuthGuard } from '../guards/metrics-auth.guard';
 import {
   ApiBearerAuth,

@@ -6,8 +6,8 @@ import {
 } from '@nestjs/common';
 import { TerminusModule } from '@nestjs/terminus';
 
-import { DynamoDBModule } from '../database/dynamodb/dynamodb.module';
-import { RateLimitModule } from '../common/rate-limit/rate-limit.module';
+import { DynamoDBModule } from '@/database/dynamodb/dynamodb.module';
+import { RateLimitModule } from '@/common/rate-limit/rate-limit.module';
 
 import { ActuatorController } from './presentation/http/actuator.controller';
 import { MetricsAuthGuard } from './presentation/guards/metrics-auth.guard';

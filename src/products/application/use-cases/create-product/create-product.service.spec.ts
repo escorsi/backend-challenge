@@ -1,13 +1,13 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { CreateProductService } from './create-product.service';
-import type { ProductsWriterPort } from '../../ports/products-writer.port';
-import { ProductStatus } from '../../../domain/enums/product-status.enum';
-import type { Clock } from '../../../../shared/application/ports/clock.port';
-import type { IdGenerator } from '../../../../shared/application/ports/id-generator.port';
+import type { ProductsWriterPort } from '@/products/application/ports/products-writer.port';
+import { ProductStatus } from '@/products/domain/enums/product-status.enum';
+import type { Clock } from '@/shared/application/ports/clock.port';
+import type { IdGenerator } from '@/shared/application/ports/id-generator.port';
 import type {
   ApplicationLogger,
   ApplicationLoggerFactory,
-} from '../../../../shared/application/ports/application-logger.port';
+} from '@/shared/application/ports/application-logger.port';
 
 describe('CreateProductService', () => {
   let service: CreateProductService;

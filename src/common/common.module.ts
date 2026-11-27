@@ -9,8 +9,8 @@ import { APP_FILTER } from '@nestjs/core';
 import {
   APPLICATION_LOGGER_FACTORY,
   type ApplicationLoggerFactory,
-} from '../shared/application/ports/application-logger.port';
-import { LoggingModule } from '../shared/infrastructure/logging/logging.module';
+} from '@/shared/application/ports/application-logger.port';
+import { LoggingModule } from '@/shared/infrastructure/logging/logging.module';
 import { RequestIdMiddleware } from './middlewares/request-id.middleware';
 import { HttpExceptionFilter } from './filters/http-exception.filter';
 

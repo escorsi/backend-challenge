@@ -1,9 +1,9 @@
 import { Body, Controller, HttpCode, HttpStatus, Post } from '@nestjs/common';
 import { ApiBody, ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
 
-import { ZodValidationPipe } from '../../../common/pipes/zod-validation.pipe';
-import { ApiErrorResponses } from '../../../common/decorators/api-error-responses.decorator';
-import { CreateUserService } from '../../application/use-cases/create-user/create-user.service';
+import { ZodValidationPipe } from '@/common/pipes/zod-validation.pipe';
+import { ApiErrorResponses } from '@/common/decorators/api-error-responses.decorator';
+import { CreateUserService } from '@/users/application/use-cases/create-user/create-user.service';
 import {
   createUserSchema,
   type CreateUserInput,

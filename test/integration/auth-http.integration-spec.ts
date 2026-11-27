@@ -12,11 +12,11 @@ import {
 import * as argon2 from 'argon2';
 import request from 'supertest';
 
-import { AuthModule } from '../../src/auth/auth.module';
-import { ProductsModule } from '../../src/products/products.module';
-import { CommonModule } from '../../src/common/common.module';
-import { DYNAMODB_DOCUMENT_CLIENT } from '../../src/database/dynamodb/dynamodb.constants';
-import { UserRole } from '../../src/shared/domain/enums/user-role.enum';
+import { AuthModule } from '@/auth/auth.module';
+import { ProductsModule } from '@/products/products.module';
+import { CommonModule } from '@/common/common.module';
+import { DYNAMODB_DOCUMENT_CLIENT } from '@/database/dynamodb/dynamodb.constants';
+import { UserRole } from '@/shared/domain/enums/user-role.enum';
 
 describe('Authentication HTTP integration', () => {
   const usersTable = 'users-integration';

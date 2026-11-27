@@ -5,7 +5,7 @@ import type { NextFunction, Request, Response } from 'express';
 import {
   REQUEST_CONTEXT,
   type RequestContext,
-} from '../../shared/infrastructure/request-context/request-context.port';
+} from '@/shared/infrastructure/request-context/request-context.port';
 
 @Injectable()
 export class RequestIdMiddleware implements NestMiddleware {

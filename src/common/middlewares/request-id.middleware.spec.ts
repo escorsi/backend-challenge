@@ -1,15 +1,15 @@
 import type { NextFunction, Request, Response } from 'express';
 
-import type { RequestContext } from '../../shared/infrastructure/request-context/request-context.port';
+import type { RequestContext } from '@/shared/infrastructure/request-context/request-context.port';
 import { RequestIdMiddleware } from './request-id.middleware';
 
 describe('RequestIdMiddleware', () => {
   it('assigns a request ID and returns it in the response header', () => {
-    const run = vi.fn((_requestId: string, callback: () => void) => callback());
     const requestContext: RequestContext = {
-      run,
+      run: (_requestId, callback) => callback(),
       getRequestId: vi.fn(),
     };
+    const run = vi.spyOn(requestContext, 'run');
     const middleware = new RequestIdMiddleware(requestContext);
     const request = {} as Request;
     const setHeader = vi.fn();

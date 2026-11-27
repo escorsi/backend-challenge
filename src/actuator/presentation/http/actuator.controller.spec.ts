@@ -1,6 +1,6 @@
 import type { Response } from 'express';
 import { ActuatorController } from './actuator.controller';
-import type { PrometheusMetricsService } from '../../infrastructure/metrics/prometheus-metrics.service';
+import type { PrometheusMetricsService } from '@/actuator/infrastructure/metrics/prometheus-metrics.service';
 
 describe('ActuatorController', () => {
   it('delegates health checks to Terminus', async () => {

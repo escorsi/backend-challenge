@@ -2,12 +2,12 @@ import { Inject, Injectable } from '@nestjs/common';
 import { DynamoDBDocumentClient, PutCommand } from '@aws-sdk/lib-dynamodb';
 import { ConfigService } from '@nestjs/config';
 
-import type { ProductsWriterPort } from '../../application/ports/products-writer.port';
+import type { ProductsWriterPort } from '@/products/application/ports/products-writer.port';
 import type {
   CreateProductParams,
   Product,
-} from '../../domain/models/product.interface';
-import { DYNAMODB_DOCUMENT_CLIENT } from '../../../database/dynamodb/dynamodb.constants';
+} from '@/products/domain/models/product.interface';
+import { DYNAMODB_DOCUMENT_CLIENT } from '@/database/dynamodb/dynamodb.constants';
 import { toProduct, toProductItem } from './mappers/product-item.mapper';
 
 @Injectable()

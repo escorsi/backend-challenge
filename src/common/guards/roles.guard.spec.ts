@@ -5,7 +5,7 @@ import { describe, expect, it, vi } from 'vitest';
 
 import { RolesGuard } from './roles.guard';
 import { ROLES_KEY } from '../decorators/roles.decorator';
-import { UserRole } from '../../shared/domain/enums/user-role.enum';
+import { UserRole } from '@/shared/domain/enums/user-role.enum';
 
 describe('RolesGuard', () => {
   const handler = vi.fn();

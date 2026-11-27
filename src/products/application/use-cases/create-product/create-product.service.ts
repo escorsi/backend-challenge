@@ -2,15 +2,15 @@ import type {
   CreateProductInput,
   CreateProductParams,
   Product,
-} from '../../../domain/models/product.interface';
-import type { ProductsWriterPort } from '../../ports/products-writer.port';
-import type { Clock } from '../../../../shared/application/ports/clock.port';
-import type { IdGenerator } from '../../../../shared/application/ports/id-generator.port';
-import { ProductStatus } from '../../../domain/enums/product-status.enum';
+} from '@/products/domain/models/product.interface';
+import type { ProductsWriterPort } from '@/products/application/ports/products-writer.port';
+import type { Clock } from '@/shared/application/ports/clock.port';
+import type { IdGenerator } from '@/shared/application/ports/id-generator.port';
+import { ProductStatus } from '@/products/domain/enums/product-status.enum';
 import {
   type ApplicationLogger,
   type ApplicationLoggerFactory,
-} from '../../../../shared/application/ports/application-logger.port';
+} from '@/shared/application/ports/application-logger.port';
 
 export class CreateProductService {
   private readonly logger: ApplicationLogger;

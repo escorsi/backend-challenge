@@ -8,8 +8,8 @@ import {
   vi,
 } from 'vitest';
 
-import { UserRole } from '../src/shared/domain/enums/user-role.enum';
-import { ProductStatus } from '../src/products/domain/enums/product-status.enum';
+import { UserRole } from '@/shared/domain/enums/user-role.enum';
+import { ProductStatus } from '@/products/domain/enums/product-status.enum';
 import { Test, type TestingModule } from '@nestjs/testing';
 import { ConfigModule } from '@nestjs/config';
 import { SwaggerModule } from '@nestjs/swagger';
@@ -19,14 +19,14 @@ import type { INestApplication } from '@nestjs/common';
 import * as argon2 from 'argon2';
 import request from 'supertest';
 
-import { AuthModule } from '../src/auth/auth.module';
-import { ProductsModule } from '../src/products/products.module';
-import { AUTH_USER_READER } from '../src/auth/application/ports/auth-user-reader.port';
-import { USERS_WRITER } from '../src/users/application/ports/users-writer.port';
-import { PRODUCTS_READER } from '../src/products/application/ports/products-reader.port';
-import { PRODUCTS_WRITER } from '../src/products/application/ports/products-writer.port';
-import { CommonModule } from '../src/common/common.module';
-import { createSwaggerConfig } from '../src/config/swagger.config';
+import { AuthModule } from '@/auth/auth.module';
+import { ProductsModule } from '@/products/products.module';
+import { AUTH_USER_READER } from '@/auth/application/ports/auth-user-reader.port';
+import { USERS_WRITER } from '@/users/application/ports/users-writer.port';
+import { PRODUCTS_READER } from '@/products/application/ports/products-reader.port';
+import { PRODUCTS_WRITER } from '@/products/application/ports/products-writer.port';
+import { CommonModule } from '@/common/common.module';
+import { createSwaggerConfig } from '@/config/swagger.config';
 
 describe('API E2E', () => {
   let app: INestApplication;

@@ -1,5 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { MAX_PRODUCT_PRICE_IN_CENTS } from '../../../domain/constants/product-pricing.constants';
+import { MAX_PRODUCT_PRICE_IN_CENTS } from '@/products/domain/constants/product-pricing.constants';
 
 export class CreateProductRequestDto {
   @ApiProperty({

@@ -9,17 +9,17 @@ import {
   UpdateCommand,
 } from '@aws-sdk/lib-dynamodb';
 
-import { ProductsReaderAdapter } from '../../src/products/infrastructure/dynamodb/products-reader.adapter';
-import { ProductsWriterAdapter } from '../../src/products/infrastructure/dynamodb/products-writer.adapter';
-import { ProductCursorManager } from '../../src/products/infrastructure/dynamodb/product-cursor.manager';
-import { ProductStatus } from '../../src/products/domain/enums/product-status.enum';
-import { SignedProductCursorCodecAdapter } from '../../src/products/infrastructure/security/signed-product-cursor-codec.adapter';
-import { backfillProductNames } from '../../src/products/infrastructure/dynamodb/migrations/backfill-product-names';
+import { ProductsReaderAdapter } from '@/products/infrastructure/dynamodb/products-reader.adapter';
+import { ProductsWriterAdapter } from '@/products/infrastructure/dynamodb/products-writer.adapter';
+import { ProductCursorManager } from '@/products/infrastructure/dynamodb/product-cursor.manager';
+import { ProductStatus } from '@/products/domain/enums/product-status.enum';
+import { SignedProductCursorCodecAdapter } from '@/products/infrastructure/security/signed-product-cursor-codec.adapter';
+import { backfillProductNames } from '@/products/infrastructure/dynamodb/migrations/backfill-product-names';
 
 import type {
   CreateProductParams,
   FindProductsParams,
-} from '../../src/products/domain/models/product.interface';
+} from '@/products/domain/models/product.interface';
 
 describe('Products DynamoDB adapters integration', () => {
   const tableName = 'products-integration';

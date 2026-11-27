@@ -1,4 +1,4 @@
-import type { User } from '../../domain/models/user.interface';
+import type { User } from '@/users/domain/models/user.interface';
 
 export const USERS_WRITER = Symbol('USERS_WRITER');
 

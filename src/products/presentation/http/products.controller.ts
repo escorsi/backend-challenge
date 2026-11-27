@@ -18,23 +18,23 @@ import {
 
 import { Throttle } from '@nestjs/throttler';
 
-import { JwtAuthGuard } from '../../../auth/presentation/guards/jwt-auth.guard';
-import { ZodValidationPipe } from '../../../common/pipes/zod-validation.pipe';
+import { JwtAuthGuard } from '@/auth/presentation/guards/jwt-auth.guard';
+import { ZodValidationPipe } from '@/common/pipes/zod-validation.pipe';
 
 import {
   productsQuerySchema,
   type ProductsQueryDto,
 } from './schemas/products-query.schema';
 
-import { FindProductsService } from '../../application/use-cases/find-products/find-products.service';
-import { CreateProductService } from '../../application/use-cases/create-product/create-product.service';
+import { FindProductsService } from '@/products/application/use-cases/find-products/find-products.service';
+import { CreateProductService } from '@/products/application/use-cases/create-product/create-product.service';
 
 import { ProductsResponseDto } from './dto/products-response.dto';
-import { ApiErrorResponses } from '../../../common/decorators/api-error-responses.decorator';
+import { ApiErrorResponses } from '@/common/decorators/api-error-responses.decorator';
 import { ApiProductsQuery } from './decorators/api-products-query.decorator';
-import { RolesGuard } from '../../../common/guards/roles.guard';
-import { Roles } from '../../../common/decorators/roles.decorator';
-import { UserRole } from '../../../shared/domain/enums/user-role.enum';
+import { RolesGuard } from '@/common/guards/roles.guard';
+import { Roles } from '@/common/decorators/roles.decorator';
+import { UserRole } from '@/shared/domain/enums/user-role.enum';
 
 import {
   createProductSchema,
@@ -42,7 +42,7 @@ import {
 } from './schemas/create-product.schema';
 import { CreateProductResponseDto } from './dto/create-product-response.dto';
 import { CreateProductRequestDto } from './dto/create-product-request.dto';
-import { AuthenticatedUserThrottlerGuard } from '../../../common/rate-limit/authenticated-user-throttler.guard';
+import { AuthenticatedUserThrottlerGuard } from '@/common/rate-limit/authenticated-user-throttler.guard';
 
 import { toProductResponse } from './mappers/product-response.mapper';
 

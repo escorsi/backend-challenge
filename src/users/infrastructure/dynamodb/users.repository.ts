@@ -6,10 +6,10 @@ import {
 } from '@aws-sdk/lib-dynamodb';
 import { ConfigService } from '@nestjs/config';
 
-import { DYNAMODB_DOCUMENT_CLIENT } from '../../../database/dynamodb/dynamodb.constants';
-import type { User } from '../../domain/models/user.interface';
-import type { UsersWriter } from '../../application/ports/users-writer.port';
-import type { AuthUserReader } from '../../../auth/application/ports/auth-user-reader.port';
+import { DYNAMODB_DOCUMENT_CLIENT } from '@/database/dynamodb/dynamodb.constants';
+import type { User } from '@/users/domain/models/user.interface';
+import type { UsersWriter } from '@/users/application/ports/users-writer.port';
+import type { AuthUserReader } from '@/auth/application/ports/auth-user-reader.port';
 
 @Injectable()
 export class UsersRepository implements AuthUserReader, UsersWriter {

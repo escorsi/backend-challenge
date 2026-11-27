@@ -1,7 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { ConfigService } from '@nestjs/config';
 
-import { InvalidProductCursorError } from '../../application/errors/invalid-product-cursor.error';
+import { InvalidProductCursorError } from '@/products/application/errors/invalid-product-cursor.error';
 import { SignedProductCursorCodecAdapter } from './signed-product-cursor-codec.adapter';
 
 describe('SignedProductCursorCodecAdapter', () => {

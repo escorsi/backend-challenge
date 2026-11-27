@@ -3,7 +3,7 @@ import { Inject, Injectable } from '@nestjs/common';
 import type {
   ApplicationLogger,
   ApplicationLoggerFactory,
-} from '../../application/ports/application-logger.port';
+} from '@/shared/application/ports/application-logger.port';
 import {
   REQUEST_CONTEXT,
   type RequestContext,
