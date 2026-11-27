@@ -1,6 +1,8 @@
-export class InvalidCredentialsError extends Error {
+import { ApplicationErrorCode } from '../../../shared/application/errors/application-error-code.enum';
+import { ApplicationError } from '../../../shared/application/errors/application.error';
+
+export class InvalidCredentialsError extends ApplicationError {
   constructor() {
-    super('Invalid credentials');
-    this.name = 'InvalidCredentialsError';
+    super(ApplicationErrorCode.INVALID_CREDENTIALS, 'Invalid credentials');
   }
 }
