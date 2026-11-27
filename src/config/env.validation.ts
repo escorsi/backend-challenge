@@ -6,6 +6,8 @@ const envSchema = z.object({
     .default('development'),
 
   PORT: z.coerce.number().int().positive().default(3000),
+  REDIS_URL: z.url({ protocol: /^rediss?$/ }),
+  TRUSTED_PROXY_CIDRS: z.string().default(''),
 
   AWS_REGION: z.string().default('us-east-1'),
   DYNAMODB_ENDPOINT: z.url().optional(),

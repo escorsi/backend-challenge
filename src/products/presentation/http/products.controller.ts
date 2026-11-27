@@ -29,13 +29,15 @@ import { FindProductsService } from '../../application/use-cases/find-products/f
 import { ProductsResponseDto } from './dto/products-response.dto';
 import { ApiErrorResponses } from '../../../common/decorators/api-error-responses.decorator';
 import { ApiProductsQuery } from './decorators/api-products-query.decorator';
+import { Throttle } from '@nestjs/throttler';
+import { AuthenticatedUserThrottlerGuard } from '../../../common/rate-limit/authenticated-user-throttler.guard.js';
 
 import { toProductResponse } from './mappers/product-response.mapper';
 
 @ApiTags('Products')
 @ApiBearerAuth()
 @Controller('products')
-@UseGuards(JwtAuthGuard)
+@UseGuards(JwtAuthGuard, AuthenticatedUserThrottlerGuard)
 export class ProductsController {
   constructor(
     private readonly findProductsService: FindProductsService,
@@ -45,9 +47,9 @@ export class ProductsController {
   @ApiOperation({
     summary: 'List active products',
     description:
-      'Returns active products with cursor-based pagination, sorting and search. ' +
-      'Rate limit: 100 requests per minute per authenticated user.',
+      'Returns active products with cursor-based pagination, sorting and search. ',
   })
+  @Throttle({ authenticatedUser: { limit: 100, ttl: 60_000 } })
   @ApiProductsQuery()
   @ApiResponse({
     status: 200,

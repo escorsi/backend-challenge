@@ -1,7 +1,6 @@
 import { NestFactory } from '@nestjs/core';
 import { ConfigService } from '@nestjs/config';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
-import type { NextFunction, Request, Response } from 'express';
 
 import { AppModule } from './app.module';
 
@@ -9,6 +8,16 @@ export async function bootstrap() {
   const app = await NestFactory.create(AppModule, { bufferLogs: true });
   app.enableShutdownHooks();
   const configService = app.get(ConfigService);
+
+  const trustedProxyCidrs = configService
+    .get<string>('TRUSTED_PROXY_CIDRS', '')
+    .split(',')
+    .map((cidr) => cidr.trim())
+    .filter(Boolean);
+
+  if (trustedProxyCidrs.length > 0) {
+    app.getHttpAdapter().getInstance().set('trust proxy', trustedProxyCidrs);
+  }
   
   app.setGlobalPrefix('v1');
 

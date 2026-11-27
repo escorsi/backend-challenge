@@ -16,6 +16,7 @@ import {
 } from './schemas/create-user.schema';
 import { CreateUserRequestDto } from './dto/create-user-request.dto';
 import { CreateUserResponseDto } from './dto/create-user-response.dto';
+import { Throttle } from '@nestjs/throttler';
 
 @ApiTags('Users')
 @Controller('users')
@@ -23,6 +24,7 @@ export class UsersController {
   constructor(private readonly createUserService: CreateUserService) {}
 
   @Post()
+  @Throttle({ default: { limit: 5, ttl: 60_000 } })
   @HttpCode(HttpStatus.OK)
   @ApiOperation({ summary: 'User Registration'  })
   @ApiBody({ type: CreateUserRequestDto })
