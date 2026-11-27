@@ -6,11 +6,11 @@ import {
 } from '@aws-sdk/lib-dynamodb';
 import { ConfigService } from '@nestjs/config';
 
-import type { ProductsReaderPort } from '../../application/ports/products-reader.port';
-import type { FindProductsParams } from '../../domain/models/product.interface';
-import type { PaginatedProducts } from '../../domain/models/product-pagination.interface';
-import { ProductStatus } from '../../domain/enums/product-status.enum';
-import { DYNAMODB_DOCUMENT_CLIENT } from '../../../database/dynamodb/dynamodb.constants';
+import type { ProductsReaderPort } from '@/products/application/ports/products-reader.port';
+import type { FindProductsParams } from '@/products/domain/models/product.interface';
+import type { PaginatedProducts } from '@/products/domain/models/product-pagination.interface';
+import { ProductStatus } from '@/products/domain/enums/product-status.enum';
+import { DYNAMODB_DOCUMENT_CLIENT } from '@/database/dynamodb/dynamodb.constants';
 import { PRODUCT_INDEXES } from './constants/product-indexes.constants';
 import {
   MAX_SEARCH_QUERY_BATCHES_PER_REQUEST,

@@ -3,7 +3,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { DynamoDBDocumentClient, PutCommand } from '@aws-sdk/lib-dynamodb';
 import { ConfigService } from '@nestjs/config';
 
-import { ProductStatus } from '../../domain/enums/product-status.enum';
+import { ProductStatus } from '@/products/domain/enums/product-status.enum';
 import { ProductsWriterAdapter } from './products-writer.adapter';
 
 describe('ProductsWriterAdapter', () => {

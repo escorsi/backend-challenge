@@ -1,15 +1,15 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import type { AuthUserReader } from '../ports/auth-user-reader.port';
-import type { PasswordHasher } from '../../../security/password-hasher.port';
+import type { PasswordHasher } from '@/security/password-hasher.port';
 import { AuthService } from './auth.service';
 import type { AccessTokenIssuer } from '../ports/access-token-issuer.port';
 import { InvalidCredentialsError } from '../errors/invalid-credentials.error';
-import { UserRole } from '../../../shared/domain/enums/user-role.enum';
+import { UserRole } from '@/shared/domain/enums/user-role.enum';
 import type {
   ApplicationLogger,
   ApplicationLoggerFactory,
-} from '../../../shared/application/ports/application-logger.port';
+} from '@/shared/application/ports/application-logger.port';
 
 describe('AuthService', () => {
   let authService: AuthService;

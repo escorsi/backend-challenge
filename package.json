@@ -8,6 +8,7 @@
   "scripts": {
     "build": "nest build",
     "deploy": "nest deploy",
+    "docs:diagrams": "node scripts/render-architecture-diagrams.mjs --png",
     "dynamodb:check": "tsx --env-file=.env scripts/check-dynamodb.ts",
     "dynamodb:setup": "tsx --env-file=.env scripts/create-tables.ts",
     "dynamodb:setup:integration": "tsx --env-file=.env scripts/create-tables.ts --integration",

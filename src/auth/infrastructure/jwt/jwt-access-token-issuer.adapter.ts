@@ -4,8 +4,8 @@ import { JwtService } from '@nestjs/jwt';
 import type {
   AccessTokenIssuer,
   IssuedAccessToken,
-} from '../../application/ports/access-token-issuer.port';
-import type { JwtPayload } from '../../domain/jwt-payload.interface';
+} from '@/auth/application/ports/access-token-issuer.port';
+import type { JwtPayload } from '@/auth/domain/jwt-payload.interface';
 
 @Injectable()
 export class JwtAccessTokenIssuerAdapter implements AccessTokenIssuer {

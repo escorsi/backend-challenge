@@ -5,8 +5,8 @@ import { SwaggerModule } from '@nestjs/swagger';
 import request from 'supertest';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 
-import { ActuatorModule } from '../src/actuator/actuator.module';
-import { createSwaggerConfig } from '../src/config/swagger.config';
+import { ActuatorModule } from '@/actuator/actuator.module';
+import { createSwaggerConfig } from '@/config/swagger.config';
 
 describe('Actuator endpoints', () => {
   let app: INestApplication;

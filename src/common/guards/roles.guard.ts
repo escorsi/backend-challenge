@@ -7,7 +7,7 @@ import {
 import { Reflector } from '@nestjs/core';
 
 import { ROLES_KEY } from '../decorators/roles.decorator';
-import { UserRole } from '../../shared/domain/enums/user-role.enum';
+import { UserRole } from '@/shared/domain/enums/user-role.enum';
 
 interface AuthenticatedUser {
   id: string;

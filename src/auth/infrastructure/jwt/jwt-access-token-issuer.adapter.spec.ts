@@ -1,7 +1,7 @@
 import { JwtService } from '@nestjs/jwt';
 import { describe, expect, it, vi } from 'vitest';
 
-import { UserRole } from '../../../shared/domain/enums/user-role.enum';
+import { UserRole } from '@/shared/domain/enums/user-role.enum';
 import { JwtAccessTokenIssuerAdapter } from './jwt-access-token-issuer.adapter';
 
 describe('JwtAccessTokenIssuerAdapter', () => {

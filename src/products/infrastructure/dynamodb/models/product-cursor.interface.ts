@@ -3,7 +3,7 @@ import type { QueryCommandInput } from '@aws-sdk/lib-dynamodb';
 import type {
   ProductSortBy,
   SortOrder,
-} from '../../../domain/models/product.interface';
+} from '@/products/domain/models/product.interface';
 
 export type ProductCursorKey = NonNullable<
   QueryCommandInput['ExclusiveStartKey']

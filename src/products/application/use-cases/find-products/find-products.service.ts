@@ -1,6 +1,6 @@
-import type { FindProductsParams } from '../../../domain/models/product.interface';
-import type { ProductsReaderPort } from '../../ports/products-reader.port';
-import type { PaginatedProducts } from '../../../domain/models/product-pagination.interface';
+import type { FindProductsParams } from '@/products/domain/models/product.interface';
+import type { ProductsReaderPort } from '@/products/application/ports/products-reader.port';
+import type { PaginatedProducts } from '@/products/domain/models/product-pagination.interface';
 
 export class FindProductsService {
   constructor(private readonly productsReader: ProductsReaderPort) {}

@@ -5,13 +5,13 @@ import { AsyncLocalRequestContextAdapter } from '../request-context/async-local-
 describe('SafeConsoleLoggerAdapter', () => {
   let loggerFactory: SafeConsoleLoggerAdapter;
   let requestContext: RequestContext;
-  let getRequestId: ReturnType<typeof vi.fn>;
+  let getRequestId = vi.fn<RequestContext['getRequestId']>();
   let stdoutWrite: ReturnType<typeof vi.spyOn>;
 
   beforeEach(() => {
-    getRequestId = vi.fn().mockReturnValue(undefined);
+    getRequestId = vi.fn<RequestContext['getRequestId']>();
     requestContext = {
-      run: vi.fn((_requestId: string, callback: () => unknown) => callback()),
+      run: (_requestId, callback) => callback(),
       getRequestId,
     };
     loggerFactory = new SafeConsoleLoggerAdapter(requestContext);

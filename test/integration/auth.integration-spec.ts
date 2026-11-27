@@ -12,10 +12,10 @@ import {
 import { DynamoDBClient } from '@aws-sdk/client-dynamodb';
 import * as argon2 from 'argon2';
 
-import { AuthModule } from '../../src/auth/auth.module';
-import { AuthService } from '../../src/auth/application/login/auth.service';
-import { DYNAMODB_DOCUMENT_CLIENT } from '../../src/database/dynamodb/dynamodb.constants';
-import { UserRole } from '../../src/shared/domain/enums/user-role.enum';
+import { AuthModule } from '@/auth/auth.module';
+import { AuthService } from '@/auth/application/login/auth.service';
+import { DYNAMODB_DOCUMENT_CLIENT } from '@/database/dynamodb/dynamodb.constants';
+import { UserRole } from '@/shared/domain/enums/user-role.enum';
 
 describe('Auth integration', () => {
   const tableName = 'users-integration';

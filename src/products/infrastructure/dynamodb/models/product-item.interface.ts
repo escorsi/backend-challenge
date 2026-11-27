@@ -1,4 +1,4 @@
-import type { Product } from '../../../domain/models/product.interface';
+import type { Product } from '@/products/domain/models/product.interface';
 
 export interface ProductItem extends Product {
   createdAtId: string;

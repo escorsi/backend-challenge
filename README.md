@@ -159,6 +159,17 @@ The application is organized by feature, with HTTP, application, domain and infr
 
 Within a feature, controllers validate and map HTTP data, application use cases coordinate the work through ports, and infrastructure adapters implement those ports. Nest modules connect implementations through dependency injection. For example, product creation flows from the controller to the use case, then through the products writer port to its DynamoDB adapter.
 
+Imports use `@/` as an alias for `src/` when crossing feature boundaries or otherwise requiring two or more parent-directory traversals. Short relative imports remain for nearby files. The alias is declared in [`tsconfig.json`](./tsconfig.json); the Nest CLI resolves it during builds, Vitest reads the same configuration, and `tsx` resolves it in maintenance scripts.
+
+![Runtime architecture: NestJS feature modules, Redis rate-limit storage and DynamoDB persistence.](./docs/diagrams/01-runtime-overview.png)
+
+The [illustrated architecture guide](./docs/architecture.md) (in Portuguese) includes two diagrams with explanations and links to the implementation:
+
+- [Runtime components and local dependencies](./docs/architecture.md#1-visão-geral-dos-componentes).
+- [Registration, login and authenticated access](./docs/architecture.md#2-cadastro-login-e-acesso-autenticado).
+
+PNG images and editable SVGs are versioned under [docs/diagrams/](./docs/diagrams/). Run `npm run docs:diagrams` to regenerate them with a local Chrome, Chromium or Edge installation; the guide documents the SVG-only option and browser configuration.
+
 ## DynamoDB model and product search
 
 | Table    | Partition key | Indexes                                                              |
@@ -217,5 +228,6 @@ AI tools were used as an engineering aid during this project, with the author re
 - Expanding unit, end-to-end and integration test cases, then helping diagnose failures and improve coverage.
 - Understanding the DynamoDB data model, local setup and table/index scripts.
 - Drafting and reviewing the Terraform configuration and its usage documentation, especially the AWS DynamoDB tables, indexes, environment safeguards and validation workflow.
+- Mapping the current architecture and application flows into documented PNG/SVG diagrams with a local regeneration script.
 
 See [`AI_USAGE.md`](./AI_USAGE.md) for the scope and review boundaries.

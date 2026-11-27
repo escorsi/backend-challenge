@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { MAX_PRODUCT_PRICE_IN_CENTS } from '../../../domain/constants/product-pricing.constants';
+import { MAX_PRODUCT_PRICE_IN_CENTS } from '@/products/domain/constants/product-pricing.constants';
 import { createProductSchema } from './create-product.schema';
 
 describe('createProductSchema', () => {

@@ -1,11 +1,11 @@
 import { Injectable, Module } from '@nestjs/common';
 import { randomUUID } from 'node:crypto';
 
-import { CLOCK, type Clock } from '../../application/ports/clock.port';
+import { CLOCK, type Clock } from '@/shared/application/ports/clock.port';
 import {
   ID_GENERATOR,
   type IdGenerator,
-} from '../../application/ports/id-generator.port';
+} from '@/shared/application/ports/id-generator.port';
 
 @Injectable()
 class SystemClock implements Clock {

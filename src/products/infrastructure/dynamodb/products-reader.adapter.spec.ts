@@ -3,13 +3,13 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { DynamoDBDocumentClient, QueryCommand } from '@aws-sdk/lib-dynamodb';
 import { ConfigService } from '@nestjs/config';
 
-import type { ProductCursorCodec } from '../../application/ports/product-cursor-codec.port';
-import { InvalidProductCursorError } from '../../application/errors/invalid-product-cursor.error';
+import type { ProductCursorCodec } from '@/products/application/ports/product-cursor-codec.port';
+import { InvalidProductCursorError } from '@/products/application/errors/invalid-product-cursor.error';
 
 import { ProductsReaderAdapter } from './products-reader.adapter';
 import { ProductCursorManager } from './product-cursor.manager';
 import type { ProductCursor } from './models/product-cursor.interface';
-import { ProductStatus } from '../../domain/enums/product-status.enum';
+import { ProductStatus } from '@/products/domain/enums/product-status.enum';
 
 describe('ProductsReaderAdapter', () => {
   let reader: ProductsReaderAdapter;

@@ -2,14 +2,14 @@ import { ArgumentsHost, HttpException, HttpStatus } from '@nestjs/common';
 import { Request, Response } from 'express';
 
 import { HttpExceptionFilter } from './http-exception.filter';
-import { InvalidCredentialsError } from '../../auth/application/errors/invalid-credentials.error';
-import { InvalidProductCursorError } from '../../products/application/errors/invalid-product-cursor.error';
-import { ApplicationError } from '../../shared/application/errors/application.error';
-import { ApplicationErrorCode } from '../../shared/application/errors/application-error-code.enum';
+import { InvalidCredentialsError } from '@/auth/application/errors/invalid-credentials.error';
+import { InvalidProductCursorError } from '@/products/application/errors/invalid-product-cursor.error';
+import { ApplicationError } from '@/shared/application/errors/application.error';
+import { ApplicationErrorCode } from '@/shared/application/errors/application-error-code.enum';
 import type {
   ApplicationLogger,
   ApplicationLoggerFactory,
-} from '../../shared/application/ports/application-logger.port';
+} from '@/shared/application/ports/application-logger.port';
 
 class UnmappedApplicationError extends ApplicationError {
   constructor() {

@@ -4,13 +4,13 @@ import { z } from 'zod';
 import type {
   FindProductsParams,
   ProductSortBy,
-} from '../../domain/models/product.interface';
-import { ProductStatus } from '../../domain/enums/product-status.enum';
-import { InvalidProductCursorError } from '../../application/errors/invalid-product-cursor.error';
+} from '@/products/domain/models/product.interface';
+import { ProductStatus } from '@/products/domain/enums/product-status.enum';
+import { InvalidProductCursorError } from '@/products/application/errors/invalid-product-cursor.error';
 import {
   PRODUCT_CURSOR_CODEC,
   type ProductCursorCodec,
-} from '../../application/ports/product-cursor-codec.port';
+} from '@/products/application/ports/product-cursor-codec.port';
 import { PRODUCT_INDEXES } from './constants/product-indexes.constants';
 import type {
   ProductCursor,

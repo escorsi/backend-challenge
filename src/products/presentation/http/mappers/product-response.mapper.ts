@@ -1,4 +1,4 @@
-import type { Product } from '../../../domain/models/product.interface';
+import type { Product } from '@/products/domain/models/product.interface';
 import type { ProductResponse } from '../interfaces/product-response.interface';
 
 export function toProductResponse(product: Product): ProductResponse {

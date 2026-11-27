@@ -8,12 +8,12 @@ import {
 import { Request, Response } from 'express';
 
 import { ApiErrorResponse } from '../interfaces/api-error-response.interface';
-import { ApplicationErrorCode } from '../../shared/application/errors/application-error-code.enum';
-import { ApplicationError } from '../../shared/application/errors/application.error';
+import { ApplicationErrorCode } from '@/shared/application/errors/application-error-code.enum';
+import { ApplicationError } from '@/shared/application/errors/application.error';
 import {
   type ApplicationLogger,
   type ApplicationLoggerFactory,
-} from '../../shared/application/ports/application-logger.port';
+} from '@/shared/application/ports/application-logger.port';
 
 const APPLICATION_ERROR_HTTP_STATUS: Record<ApplicationErrorCode, number> = {
   [ApplicationErrorCode.INVALID_CREDENTIALS]: HttpStatus.UNAUTHORIZED,

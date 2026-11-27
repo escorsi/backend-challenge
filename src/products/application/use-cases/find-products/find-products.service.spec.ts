@@ -1,7 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { FindProductsService } from './find-products.service';
-import type { ProductsReaderPort } from '../../ports/products-reader.port';
-import { ProductStatus } from '../../../domain/enums/product-status.enum';
+import type { ProductsReaderPort } from '@/products/application/ports/products-reader.port';
+import { ProductStatus } from '@/products/domain/enums/product-status.enum';
 
 describe('FindProductsService', () => {
   let service: FindProductsService;

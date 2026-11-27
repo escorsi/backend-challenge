@@ -1,4 +1,4 @@
-import type { Product } from '../../../domain/models/product.interface';
+import type { Product } from '@/products/domain/models/product.interface';
 
 export type ProductResponse = Pick<
   Product,

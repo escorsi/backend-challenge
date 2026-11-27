@@ -3,9 +3,9 @@ import { DynamoDBClient } from '@aws-sdk/client-dynamodb';
 import { DynamoDBDocumentClient, PutCommand } from '@aws-sdk/lib-dynamodb';
 import * as argon2 from 'argon2';
 
-import { UserRole } from '../src/shared/domain/enums/user-role.enum';
-import { ProductStatus } from '../src/products/domain/enums/product-status.enum';
-import { toProductItem } from '../src/products/infrastructure/dynamodb/mappers/product-item.mapper';
+import { UserRole } from '@/shared/domain/enums/user-role.enum';
+import { ProductStatus } from '@/products/domain/enums/product-status.enum';
+import { toProductItem } from '@/products/infrastructure/dynamodb/mappers/product-item.mapper';
 
 const region = process.env.AWS_REGION ?? 'us-east-1';
 const endpoint = process.env.DYNAMODB_ENDPOINT;

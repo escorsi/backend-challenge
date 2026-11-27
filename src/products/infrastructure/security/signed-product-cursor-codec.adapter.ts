@@ -2,8 +2,8 @@ import { Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { createHmac, timingSafeEqual } from 'node:crypto';
 
-import { InvalidProductCursorError } from '../../application/errors/invalid-product-cursor.error';
-import type { ProductCursorCodec } from '../../application/ports/product-cursor-codec.port';
+import { InvalidProductCursorError } from '@/products/application/errors/invalid-product-cursor.error';
+import type { ProductCursorCodec } from '@/products/application/ports/product-cursor-codec.port';
 
 @Injectable()
 export class SignedProductCursorCodecAdapter implements ProductCursorCodec {

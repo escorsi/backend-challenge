@@ -1,14 +1,14 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { CreateUserService } from './create-user.service';
-import { UserRole } from '../../../../shared/domain/enums/user-role.enum';
-import type { UsersWriter } from '../../ports/users-writer.port';
-import type { PasswordHasher } from '../../../../security/password-hasher.port';
-import type { Clock } from '../../../../shared/application/ports/clock.port';
-import type { IdGenerator } from '../../../../shared/application/ports/id-generator.port';
+import { UserRole } from '@/shared/domain/enums/user-role.enum';
+import type { UsersWriter } from '@/users/application/ports/users-writer.port';
+import type { PasswordHasher } from '@/security/password-hasher.port';
+import type { Clock } from '@/shared/application/ports/clock.port';
+import type { IdGenerator } from '@/shared/application/ports/id-generator.port';
 import type {
   ApplicationLogger,
   ApplicationLoggerFactory,
-} from '../../../../shared/application/ports/application-logger.port';
+} from '@/shared/application/ports/application-logger.port';
 
 describe('CreateUserService', () => {
   let service: CreateUserService;

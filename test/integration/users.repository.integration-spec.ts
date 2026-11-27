@@ -8,10 +8,10 @@ import {
 } from '@aws-sdk/lib-dynamodb';
 import { ConfigService } from '@nestjs/config';
 
-import { UsersRepository } from '../../src/users/infrastructure/dynamodb/users.repository';
-import { UserRole } from '../../src/shared/domain/enums/user-role.enum';
+import { UsersRepository } from '@/users/infrastructure/dynamodb/users.repository';
+import { UserRole } from '@/shared/domain/enums/user-role.enum';
 
-import type { User } from '../../src/users/domain/models/user.interface';
+import type { User } from '@/users/domain/models/user.interface';
 
 describe('UsersRepository integration', () => {
   const tableName = 'users-integration';

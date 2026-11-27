@@ -1,4 +1,4 @@
-import type { ProductSortBy } from '../../../domain/models/product.interface';
+import type { ProductSortBy } from '@/products/domain/models/product.interface';
 
 export const PRODUCT_INDEXES: Record<
   ProductSortBy,

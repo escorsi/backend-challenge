@@ -1,4 +1,4 @@
-import { type PasswordHasher } from '../../../security/password-hasher.port';
+import { type PasswordHasher } from '@/security/password-hasher.port';
 import type { LoginInput } from './login-input.interface';
 import { InvalidCredentialsError } from '../errors/invalid-credentials.error';
 import type { AccessTokenIssuer } from '../ports/access-token-issuer.port';
@@ -6,7 +6,7 @@ import type { AuthUserReader } from '../ports/auth-user-reader.port';
 import {
   type ApplicationLogger,
   type ApplicationLoggerFactory,
-} from '../../../shared/application/ports/application-logger.port';
+} from '@/shared/application/ports/application-logger.port';
 
 export class AuthService {
   private readonly logger: ApplicationLogger;

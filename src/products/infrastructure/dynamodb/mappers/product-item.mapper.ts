@@ -1,9 +1,9 @@
 import type {
   CreateProductParams,
   Product,
-} from '../../../domain/models/product.interface';
+} from '@/products/domain/models/product.interface';
 import type { ProductItem } from '../models/product-item.interface';
-import { MAX_PRODUCT_PRICE_IN_CENTS } from '../../../domain/constants/product-pricing.constants';
+import { MAX_PRODUCT_PRICE_IN_CENTS } from '@/products/domain/constants/product-pricing.constants';
 
 const PRICE_SORT_KEY_WIDTH = String(MAX_PRODUCT_PRICE_IN_CENTS).length;
 
