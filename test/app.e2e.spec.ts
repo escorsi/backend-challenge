@@ -12,6 +12,8 @@ import { UserRole } from '../src/shared/domain/enums/user-role.enum';
 import { ProductStatus } from '../src/products/domain/enums/product-status.enum';
 import { Test, type TestingModule } from '@nestjs/testing';
 import { ConfigModule } from '@nestjs/config';
+import { SwaggerModule } from '@nestjs/swagger';
+import { JwtService } from '@nestjs/jwt';
 import type { INestApplication } from '@nestjs/common';
 
 import * as argon2 from 'argon2';
@@ -24,6 +26,7 @@ import { USERS_WRITER } from '../src/users/application/ports/users-writer.port';
 import { PRODUCTS_READER } from '../src/products/application/ports/products-reader.port';
 import { PRODUCTS_WRITER } from '../src/products/application/ports/products-writer.port';
 import { CommonModule } from '../src/common/common.module';
+import { createSwaggerConfig } from '../src/config/swagger.config';
 
 describe('API E2E', () => {
   let app: INestApplication;
@@ -55,7 +58,8 @@ describe('API E2E', () => {
     status: ProductStatus.ACTIVE,
     createdAt: '2026-11-24T10:00:00.000Z',
     createdAtId: '2026-11-24T10:00:00.000Z#product-1',
-    nameSort: 'notebook#product-1',
+    nameSort: 'notebook',
+    nameSearch: 'notebook',
     priceSort: '000000000450000#product-1',
     descriptionSearch: 'high performance notebook',
   };
@@ -98,7 +102,8 @@ describe('API E2E', () => {
       id: 'product-2',
       ...params,
       createdAtId: `${params.createdAt}#${params.id}`,
-      nameSort: `${params.name.trim().toLowerCase()}#${params.id}`,
+      nameSort: params.name.trim().toLowerCase(),
+      nameSearch: params.name.trim().toLowerCase(),
       priceSort: `${String(params.priceInCents).padStart(15, '0')}#${params.id}`,
       descriptionSearch: params.description.trim().toLowerCase(),
     }));
@@ -156,6 +161,35 @@ describe('API E2E', () => {
     await app?.close();
   });
 
+  it('documents the nullable cursor and the public error response', () => {
+    const document = SwaggerModule.createDocument(app, createSwaggerConfig());
+
+    expect(document.components?.schemas?.ProductsPaginationDto).toMatchObject({
+      properties: {
+        nextCursor: { type: 'string', nullable: true },
+      },
+      required: expect.arrayContaining(['nextCursor']),
+    });
+    expect(document.components?.schemas?.ApiErrorResponseDto).toMatchObject({
+      properties: {
+        statusCode: { type: 'number' },
+        code: { type: 'string' },
+        message: { type: 'string' },
+        timestamp: { type: 'string', format: 'date-time' },
+        path: { type: 'string' },
+        requestId: { type: 'string' },
+      },
+      required: expect.arrayContaining([
+        'statusCode',
+        'code',
+        'message',
+        'timestamp',
+        'path',
+        'requestId',
+      ]),
+    });
+  });
+
   describe('POST /v1/auth/login', () => {
     it('should authenticate a user and return an access token', async () => {
       const response = await request(app.getHttpServer())
@@ -190,7 +224,7 @@ describe('API E2E', () => {
     });
 
     it('should reject an invalid email', async () => {
-      await request(app.getHttpServer())
+      const response = await request(app.getHttpServer())
         .post('/v1/auth/login')
         .set('X-Forwarded-For', '10.0.0.3')
         .send({
@@ -198,6 +232,17 @@ describe('API E2E', () => {
           password: 'correct-password',
         })
         .expect(400);
+
+      expect(response.body).toMatchObject({
+        statusCode: 400,
+        code: 'BAD_REQUEST',
+        message: 'Validation failed',
+        path: '/v1/auth/login',
+        requestId: expect.any(String),
+      });
+      expect(usersRepositoryMock.findByEmail).not.toHaveBeenCalled();
+      expect(JSON.stringify(response.body)).not.toContain('invalid-email');
+      expect(JSON.stringify(response.body)).not.toContain('correct-password');
     });
 
     it('should enforce the login limit for the client IP resolved through a trusted proxy', async () => {
@@ -354,10 +399,66 @@ describe('API E2E', () => {
         })
         .expect(200);
 
-      await request(app.getHttpServer())
+      const response = await request(app.getHttpServer())
         .get('/v1/products?pageSize=200')
         .set('Authorization', `Bearer ${loginResponse.body.accessToken}`)
         .expect(400);
+
+      expect(response.body).toMatchObject({
+        statusCode: 400,
+        code: 'BAD_REQUEST',
+        message: 'Validation failed',
+        path: '/v1/products',
+        requestId: expect.any(String),
+      });
+      expect(productsRepositoryMock.findAll).not.toHaveBeenCalled();
+    });
+
+    it('keeps unexpected failures private and correlates their error logs', async () => {
+      const error = Object.assign(
+        new Error('password=private-db-password Bearer private-access-token'),
+        {
+          name: 'ProvisionedThroughputExceededException',
+          $metadata: {
+            httpStatusCode: 400,
+            attempts: 3,
+            requestId: 'private-sdk-metadata',
+          },
+        },
+      );
+      productsRepositoryMock.findAll.mockRejectedValueOnce(error);
+      const token = await app.get(JwtService).signAsync({
+        sub: regularUser.id,
+        email: regularUser.email,
+        role: UserRole.USER,
+      });
+      const stdout = vi
+        .spyOn(process.stdout, 'write')
+        .mockImplementation(() => true);
+
+      try {
+        const response = await request(app.getHttpServer())
+          .get('/v1/products?search=private-query-token')
+          .set('Authorization', `Bearer ${token}`)
+          .expect(500);
+
+        expect(response.body.message).toBe('Internal server error');
+        expect(response.body).not.toHaveProperty('details');
+        const output = stdout.mock.calls
+          .map(([chunk]) => String(chunk))
+          .join('');
+        const record = JSON.parse(output.trim());
+        expect(record).toMatchObject({
+          level: 'error',
+          context: 'HttpExceptionFilter',
+          message: 'HTTP request failed (500 INTERNAL_SERVER_ERROR)',
+          requestId: response.body.requestId,
+        });
+        expect(output).not.toContain('private-');
+        expect(JSON.stringify(response.body)).not.toContain('private-');
+      } finally {
+        stdout.mockRestore();
+      }
     });
   });
 

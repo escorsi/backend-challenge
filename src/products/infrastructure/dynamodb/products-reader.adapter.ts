@@ -47,6 +47,7 @@ export class ProductsReaderAdapter implements ProductsReaderPort {
       cursor?.lastEvaluatedKey;
     const items: ProductItem[] = [];
     let queryCount = 0;
+    let evaluatedItems = 0;
 
     while (
       items.length <= params.pageSize &&
@@ -57,14 +58,19 @@ export class ProductsReaderAdapter implements ProductsReaderPort {
     ) {
       const remainingItemsIncludingLookahead =
         params.pageSize + 1 - items.length;
+      const limit = normalizedSearchTerm
+        ? this.estimateSearchLimit(
+            remainingItemsIncludingLookahead,
+            evaluatedItems,
+            items.length,
+          )
+        : remainingItemsIncludingLookahead;
       const result = await this.documentClient.send(
         new QueryCommand(
           this.buildQueryInput(
             params,
             normalizedSearchTerm,
-            normalizedSearchTerm
-              ? SEARCH_QUERY_BATCH_SIZE
-              : remainingItemsIncludingLookahead,
+            limit,
             lastEvaluatedKey,
           ),
         ),
@@ -72,9 +78,8 @@ export class ProductsReaderAdapter implements ProductsReaderPort {
       queryCount += 1;
 
       const batchItems = (result.Items ?? []) as ProductItem[];
-      items.push(
-        ...this.filterBatch(batchItems, params.sortBy, normalizedSearchTerm),
-      );
+      items.push(...batchItems);
+      evaluatedItems += result.ScannedCount ?? limit;
 
       lastEvaluatedKey = result.LastEvaluatedKey;
 
@@ -88,6 +93,25 @@ export class ProductsReaderAdapter implements ProductsReaderPort {
       params,
       normalizedSearchTerm,
       lastEvaluatedKey,
+    );
+  }
+
+  private estimateSearchLimit(
+    remainingItems: number,
+    evaluatedItems: number,
+    matches: number,
+  ): number {
+    if (evaluatedItems === 0) {
+      return Math.min(remainingItems, SEARCH_QUERY_BATCH_SIZE);
+    }
+
+    if (matches === 0) {
+      return SEARCH_QUERY_BATCH_SIZE;
+    }
+
+    return Math.min(
+      SEARCH_QUERY_BATCH_SIZE,
+      Math.ceil((remainingItems * evaluatedItems) / matches),
     );
   }
 
@@ -108,12 +132,12 @@ export class ProductsReaderAdapter implements ProductsReaderPort {
       ExclusiveStartKey: exclusiveStartKey,
     };
 
-    if (normalizedSearchTerm && params.sortBy !== 'name') {
+    if (normalizedSearchTerm) {
       queryInput.FilterExpression =
-        'contains(#nameSort, :searchTerm) OR contains(#descriptionSearch, :searchTerm)';
+        'contains(#nameSearch, :searchTerm) OR contains(#descriptionSearch, :searchTerm)';
       queryInput.ExpressionAttributeNames = {
         ...queryInput.ExpressionAttributeNames,
-        '#nameSort': 'nameSort',
+        '#nameSearch': 'nameSearch',
         '#descriptionSearch': 'descriptionSearch',
       };
       queryInput.ExpressionAttributeValues = {
@@ -123,22 +147,6 @@ export class ProductsReaderAdapter implements ProductsReaderPort {
     }
 
     return queryInput;
-  }
-
-  private filterBatch(
-    items: ProductItem[],
-    sortBy: FindProductsParams['sortBy'],
-    searchTerm?: string,
-  ): ProductItem[] {
-    if (!searchTerm || sortBy !== 'name') {
-      return items;
-    }
-
-    return items.filter(
-      (item) =>
-        item.nameSort.includes(searchTerm) ||
-        item.descriptionSearch.includes(searchTerm),
-    );
   }
 
   private createPage(

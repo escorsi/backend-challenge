@@ -11,6 +11,7 @@ export class ProductsPaginationDto {
   pageSize: number;
 
   @ApiProperty({
+    type: String,
     example: 'eyJ2IjoxLCJzb3J0QnkiOi...',
     nullable: true,
     description:

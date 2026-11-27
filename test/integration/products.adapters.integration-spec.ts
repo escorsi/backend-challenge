@@ -6,6 +6,7 @@ import {
   DeleteCommand,
   DynamoDBDocumentClient,
   GetCommand,
+  UpdateCommand,
 } from '@aws-sdk/lib-dynamodb';
 
 import { ProductsReaderAdapter } from '../../src/products/infrastructure/dynamodb/products-reader.adapter';
@@ -13,6 +14,7 @@ import { ProductsWriterAdapter } from '../../src/products/infrastructure/dynamod
 import { ProductCursorManager } from '../../src/products/infrastructure/dynamodb/product-cursor.manager';
 import { ProductStatus } from '../../src/products/domain/enums/product-status.enum';
 import { SignedProductCursorCodecAdapter } from '../../src/products/infrastructure/security/signed-product-cursor-codec.adapter';
+import { backfillProductNames } from '../../src/products/infrastructure/dynamodb/migrations/backfill-product-names';
 
 import type {
   CreateProductParams,
@@ -83,6 +85,18 @@ describe('Products DynamoDB adapters integration', () => {
     },
   ];
 
+  const prefixedProduct: CreateProductParams = {
+    ...products[0],
+    id: 'integration-product-prefix',
+    name: 'Notebook Pro',
+  };
+  const duplicateNameProduct: CreateProductParams = {
+    ...products[0],
+    id: 'integration-product-duplicate',
+    name: 'NOTEBOOK',
+  };
+  const allProducts = [...products, prefixedProduct, duplicateNameProduct];
+
   beforeAll(async () => {
     await client
       .send(
@@ -119,7 +133,7 @@ describe('Products DynamoDB adapters integration', () => {
   });
 
   beforeEach(async () => {
-    for (const product of products) {
+    for (const product of allProducts) {
       await documentClient.send(
         new DeleteCommand({
           TableName: tableName,
@@ -132,7 +146,7 @@ describe('Products DynamoDB adapters integration', () => {
   });
 
   afterAll(async () => {
-    for (const product of products) {
+    for (const product of allProducts) {
       await documentClient.send(
         new DeleteCommand({
           TableName: tableName,
@@ -172,7 +186,8 @@ describe('Products DynamoDB adapters integration', () => {
       expect(Item).toEqual({
         ...products[0],
         createdAtId: `${products[0].createdAt}#${products[0].id}`,
-        nameSort: 'notebook#integration-product-1',
+        nameSort: 'notebook',
+        nameSearch: 'notebook',
         priceSort: '000000000450000#integration-product-1',
         descriptionSearch: 'high performance notebook',
       });
@@ -255,6 +270,86 @@ describe('Products DynamoDB adapters integration', () => {
       ]);
     });
 
+    it.each(['createdAt', 'name', 'price'] as const)(
+      'does not match identifiers or key separators when sorting by %s',
+      async (sortBy) => {
+        await seedProducts();
+
+        for (const searchTerm of [products[0].id, '#']) {
+          const result = await reader.findAll({
+            ...defaultParams,
+            sortBy,
+            searchTerm,
+          });
+
+          expect(result.items).toEqual([]);
+          expect(result.pagination.hasNextPage).toBe(false);
+        }
+      },
+    );
+
+    it('matches descriptions when searching on the name index', async () => {
+      await seedProducts();
+
+      const result = await reader.findAll({
+        ...defaultParams,
+        sortBy: 'name',
+        searchTerm: 'ANDROID',
+      });
+
+      expect(result.items.map((item) => item.id)).toEqual([products[1].id]);
+    });
+
+    it.each(['asc', 'desc'] as const)(
+      'preserves prefix ordering when sorting names %s',
+      async (sortOrder) => {
+        await seedProducts();
+        await writer.create(prefixedProduct);
+
+        const result = await reader.findAll({
+          ...defaultParams,
+          sortBy: 'name',
+          sortOrder,
+          searchTerm: 'notebook',
+        });
+
+        const expected = [products[0].name, prefixedProduct.name];
+        expect(result.items.map((item) => item.name)).toEqual(
+          sortOrder === 'asc' ? expected : expected.toReversed(),
+        );
+      },
+    );
+
+    it.each(['asc', 'desc'] as const)(
+      'paginates equal normalized names without skipping or repeating products (%s)',
+      async (sortOrder) => {
+        await seedProducts();
+        await writer.create(duplicateNameProduct);
+
+        const params: FindProductsParams = {
+          pageSize: 1,
+          sortBy: 'name',
+          sortOrder,
+          searchTerm: 'notebook',
+        };
+        const firstPage = await reader.findAll(params);
+        const secondPage = await reader.findAll({
+          ...params,
+          cursor: firstPage.pagination.nextCursor!,
+        });
+
+        expect(firstPage.items).toHaveLength(1);
+        expect(firstPage.pagination.hasNextPage).toBe(true);
+        expect(secondPage.items).toHaveLength(1);
+        expect(secondPage.pagination.hasNextPage).toBe(false);
+        expect(
+          new Set(
+            [...firstPage.items, ...secondPage.items].map((item) => item.id),
+          ),
+        ).toEqual(new Set([products[0].id, duplicateNameProduct.id]));
+      },
+    );
+
     it('should paginate results using a cursor', async () => {
       await seedProducts();
 
@@ -276,6 +371,97 @@ describe('Products DynamoDB adapters integration', () => {
       expect(secondPage.items).toHaveLength(1);
       expect(secondPage.items[0].id).not.toBe(firstPage.items[0].id);
       expect(secondPage.pagination.hasNextPage).toBe(false);
+    });
+
+    it('limits dense search pages to the requested item and one lookahead', async () => {
+      await seedProducts();
+      await writer.create(prefixedProduct);
+      const send = vi.spyOn(documentClient, 'send');
+
+      try {
+        const params: FindProductsParams = {
+          pageSize: 1,
+          sortBy: 'name',
+          sortOrder: 'asc',
+          searchTerm: 't',
+        };
+        const first = await reader.findAll(params);
+        const second = await reader.findAll({
+          ...params,
+          cursor: first.pagination.nextCursor!,
+        });
+        const third = await reader.findAll({
+          ...params,
+          cursor: second.pagination.nextCursor!,
+        });
+
+        expect(
+          [first, second, third].flatMap((page) =>
+            page.items.map((item) => item.name),
+          ),
+        ).toEqual(['Notebook', 'Notebook Pro', 'Smartphone']);
+        expect(third.pagination.hasNextPage).toBe(false);
+        expect(
+          send.mock.calls.map(
+            ([command]) =>
+              (command as { input: { Limit?: number } }).input.Limit,
+          ),
+        ).toEqual([2, 2, 2]);
+      } finally {
+        send.mockRestore();
+      }
+    });
+  });
+
+  it('previews and migrates legacy name attributes without changing product data', async () => {
+    await writer.create(products[0]);
+    await documentClient.send(
+      new UpdateCommand({
+        TableName: tableName,
+        Key: { id: products[0].id },
+        UpdateExpression: 'SET #nameSort = :legacyNameSort REMOVE #nameSearch',
+        ExpressionAttributeNames: {
+          '#nameSort': 'nameSort',
+          '#nameSearch': 'nameSearch',
+        },
+        ExpressionAttributeValues: {
+          ':legacyNameSort': `notebook#${products[0].id}`,
+        },
+      }),
+    );
+    const getProduct = () =>
+      documentClient.send(
+        new GetCommand({
+          TableName: tableName,
+          Key: { id: products[0].id },
+          ConsistentRead: true,
+        }),
+      );
+    const before = await getProduct();
+
+    const preview = await backfillProductNames(documentClient, tableName);
+    expect(preview.needsUpdate).toBeGreaterThanOrEqual(1);
+    expect(preview.updated).toBe(0);
+    expect((await getProduct()).Item).toEqual(before.Item);
+
+    const applied = await backfillProductNames(
+      documentClient,
+      tableName,
+      false,
+    );
+    expect(applied.updated).toBeGreaterThanOrEqual(1);
+    expect(applied.conflicts).toBe(0);
+    expect((await getProduct()).Item).toEqual({
+      ...before.Item,
+      nameSort: 'notebook',
+      nameSearch: 'notebook',
+    });
+    expect(
+      await backfillProductNames(documentClient, tableName, false),
+    ).toMatchObject({
+      needsUpdate: 0,
+      updated: 0,
+      conflicts: 0,
     });
   });
 });

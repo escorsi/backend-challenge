@@ -19,6 +19,7 @@ import type {
 import type { ProductItem } from './models/product-item.interface';
 
 const cursorSchema = z.object({
+  version: z.literal(2),
   lastEvaluatedKey: z
     .record(z.string(), z.unknown())
     .refine((key) => Object.keys(key).length > 0),
@@ -65,8 +66,8 @@ export class ProductCursorManager {
     };
   }
 
-  encode(cursor: ProductCursor): string {
-    return this.codec.encode(cursor);
+  encode(cursor: Omit<ProductCursor, 'version'>): string {
+    return this.codec.encode({ ...cursor, version: 2 });
   }
 
   private validate(

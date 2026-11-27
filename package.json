@@ -11,6 +11,7 @@
     "dynamodb:check": "tsx --env-file=.env scripts/check-dynamodb.ts",
     "dynamodb:setup": "tsx --env-file=.env scripts/create-tables.ts",
     "dynamodb:setup:integration": "tsx --env-file=.env scripts/create-tables.ts --integration",
+    "dynamodb:backfill-product-names": "tsx --env-file=.env scripts/backfill-product-names.ts",
     "format": "prettier --write \"src/**/*.ts\" \"test/**/*.ts\" \"scripts/**/*.ts\" \"*.config.{ts,mts}\" package.json README.md",
     "format:check": "prettier --check \"src/**/*.ts\" \"test/**/*.ts\" \"scripts/**/*.ts\" \"*.config.{ts,mts}\" package.json README.md",
     "seed": "tsx --env-file=.env scripts/seed.ts",

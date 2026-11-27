@@ -10,6 +10,7 @@ export type ProductCursorKey = NonNullable<
 >;
 
 export interface ProductCursor {
+  version: 2;
   lastEvaluatedKey: ProductCursorKey;
   sortBy: ProductSortBy;
   sortOrder: SortOrder;

@@ -1,5 +1,29 @@
 import { z } from 'zod';
 
+const JWT_DURATION_SECONDS: Record<string, number> = {
+  s: 1,
+  m: 60,
+  h: 3600,
+  d: 86400,
+  w: 604800,
+};
+
+const jwtExpirationSchema = z
+  .string()
+  .regex(/^[1-9]\d*[smhdw]$/, {
+    message:
+      'JWT_EXPIRES_IN must be a positive integer followed by s, m, h, d or w (for example, 15m)',
+  })
+  .refine(
+    (value) =>
+      Number.isSafeInteger(
+        Number(value.slice(0, -1)) *
+          JWT_DURATION_SECONDS[value.slice(-1)] *
+          1000,
+      ),
+    { message: 'JWT_EXPIRES_IN is too large to represent safely' },
+  );
+
 const envSchema = z
   .object({
     NODE_ENV: z
@@ -19,7 +43,7 @@ const envSchema = z
     SEED_USER_PASSWORD: z.string().optional(),
 
     JWT_SECRET: z.string().min(32),
-    JWT_EXPIRES_IN: z.string().default('15m'),
+    JWT_EXPIRES_IN: jwtExpirationSchema.default('15m'),
 
     CURSOR_SECRET: z.string().min(32),
   })

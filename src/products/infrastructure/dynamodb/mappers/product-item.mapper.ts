@@ -7,11 +7,19 @@ import { MAX_PRODUCT_PRICE_IN_CENTS } from '../../../domain/constants/product-pr
 
 const PRICE_SORT_KEY_WIDTH = String(MAX_PRODUCT_PRICE_IN_CENTS).length;
 
+export function toProductNameAttributes(
+  name: string,
+): Pick<ProductItem, 'nameSort' | 'nameSearch'> {
+  const normalizedName = name.trim().toLowerCase();
+
+  return { nameSort: normalizedName, nameSearch: normalizedName };
+}
+
 export function toProductItem(params: CreateProductParams): ProductItem {
   return {
     ...params,
+    ...toProductNameAttributes(params.name),
     createdAtId: `${params.createdAt}#${params.id}`,
-    nameSort: `${params.name.trim().toLowerCase()}#${params.id}`,
     priceSort: `${String(params.priceInCents).padStart(
       PRICE_SORT_KEY_WIDTH,
       '0',

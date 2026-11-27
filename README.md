@@ -133,7 +133,7 @@ Use `.env.example` as a local configuration template. The table below documents 
 | `DYNAMODB_PRODUCTS_TABLE` | Products table name                        | `products`                                                         |
 | `TRUSTED_PROXY_CIDRS`     | Comma-separated CIDRs for trusted proxies  | Empty; proxy trust disabled                                        |
 | `JWT_SECRET`              | JWT signing secret                         | Required; at least 32 characters; example rejected in production   |
-| `JWT_EXPIRES_IN`          | Access-token lifetime                      | `15m`                                                              |
+| `JWT_EXPIRES_IN`          | Access-token lifetime                      | `15m`; positive integer with unit `s`, `m`, `h`, `d` or `w`        |
 | `CURSOR_SECRET`           | HMAC key for product cursors               | Required; at least 32 characters; example rejected in production   |
 | `METRICS_BEARER_TOKEN`    | Bearer token protecting Prometheus metrics | Required in production; at least 32 characters when set            |
 | `SEED_USER_EMAIL`         | Email for the local seed administrator     | Optional in app config; required to run the seed script            |
@@ -168,7 +168,7 @@ Within a feature, controllers validate and map HTTP data, application use cases 
 
 The product indexes partition by `status` and sort by the selected field. The API queries only `ACTIVE` products. Global secondary indexes are eventually consistent, so a newly created product can take a short time to appear in a listing.
 
-Search uses DynamoDB query filters, which are applied after items are read. To bound work, each search request evaluates at most five batches of 100 items. A search page can contain fewer items than requested, or none, while still returning a `nextCursor`. Continue until the cursor is `null`. This keeps each request bounded; broad text search over a large catalog may need a dedicated search service later.
+Search uses DynamoDB query filters, which are applied after items are read. The first batch requests the remaining page size plus one lookahead item, capped at 100. Later batches adapt to the observed match rate using DynamoDB's `ScannedCount`; a batch with no matches allows the next query to evaluate up to 100 items. Each search request makes at most five queries, each capped at 100 evaluated items. Dense searches with `pageSize=1` start with two evaluated items rather than a fixed batch of 100. A search page can contain fewer items than requested, or none, while still returning a `nextCursor`. Continue until the cursor is `null`. This keeps each request bounded; broad text search over a large catalog may need a dedicated search service later.
 
 ## Terraform (AWS DynamoDB)
 

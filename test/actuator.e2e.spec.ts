@@ -1,10 +1,12 @@
 import type { INestApplication } from '@nestjs/common';
 import { Test } from '@nestjs/testing';
 import { ConfigModule } from '@nestjs/config';
+import { SwaggerModule } from '@nestjs/swagger';
 import request from 'supertest';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 
 import { ActuatorModule } from '../src/actuator/actuator.module';
+import { createSwaggerConfig } from '../src/config/swagger.config';
 
 describe('Actuator endpoints', () => {
   let app: INestApplication;
@@ -71,5 +73,19 @@ describe('Actuator endpoints', () => {
     expect(response.text).toMatch(
       /http_requests_total\{method="GET",route="[^"]*actuator\/health",status_code="200"\} 1/,
     );
+  });
+
+  it('documents the dedicated metrics bearer token and keeps health public', () => {
+    const document = SwaggerModule.createDocument(app, createSwaggerConfig());
+
+    expect(document.paths['/v1/actuator/prometheus'].get?.security).toEqual([
+      { metricsBearer: [] },
+    ]);
+    expect(document.components?.securitySchemes?.metricsBearer).toMatchObject({
+      type: 'http',
+      scheme: 'bearer',
+      description: expect.stringContaining('METRICS_BEARER_TOKEN'),
+    });
+    expect(document.paths['/v1/actuator/health'].get?.security).toBeUndefined();
   });
 });

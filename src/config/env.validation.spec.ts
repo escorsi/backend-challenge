@@ -66,6 +66,32 @@ describe('validateEnv', () => {
     ).toThrow();
   });
 
+  it.each(['1s', '15m', '2h', '1d', '1w'])(
+    'accepts an explicit positive JWT duration: %s',
+    (duration) => {
+      expect(
+        validateEnv({ ...requiredSecrets, JWT_EXPIRES_IN: duration }),
+      ).toHaveProperty('JWT_EXPIRES_IN', duration);
+    },
+  );
+
+  it.each([
+    '',
+    'banana',
+    '0',
+    '0s',
+    '-1s',
+    '120',
+    '1ms',
+    '0.5s',
+    '1e3s',
+    '9007199254740992w',
+  ])('rejects an invalid JWT duration at startup: %s', (duration) => {
+    expect(() =>
+      validateEnv({ ...requiredSecrets, JWT_EXPIRES_IN: duration }),
+    ).toThrow('JWT_EXPIRES_IN');
+  });
+
   it('requires a metrics bearer token in production', () => {
     expect(() =>
       validateEnv({

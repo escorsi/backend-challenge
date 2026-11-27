@@ -26,7 +26,8 @@ describe('ProductsReaderAdapter', () => {
     status: ProductStatus.ACTIVE,
     createdAt: '2026-11-24T10:00:00.000Z',
     createdAtId: '2026-11-24T10:00:00.000Z#product-1',
-    nameSort: 'notebook#product-1',
+    nameSort: 'notebook',
+    nameSearch: 'notebook',
     priceSort: '000000000450000#product-1',
     descriptionSearch: 'high performance notebook',
   };
@@ -174,7 +175,7 @@ describe('ProductsReaderAdapter', () => {
         .calls[0][0] as QueryCommand;
 
       expect(command.input.FilterExpression).toContain(
-        'contains(#nameSort, :searchTerm)',
+        'contains(#nameSearch, :searchTerm)',
       );
 
       expect(command.input.FilterExpression).toContain(
@@ -184,10 +185,83 @@ describe('ProductsReaderAdapter', () => {
       expect(command.input.ExpressionAttributeValues).toMatchObject({
         ':searchTerm': 'notebook',
       });
-      expect(command.input.Limit).toBe(100);
+      expect(command.input.Limit).toBe(21);
     });
 
-    it('should filter name-index searches in memory because nameSort is that index key', async () => {
+    it('reads only the page and one lookahead item for a dense search', async () => {
+      const nextProduct = {
+        ...product,
+        id: 'product-2',
+        createdAtId: `${product.createdAt}#product-2`,
+      };
+      vi.mocked(documentClient.send).mockResolvedValueOnce({
+        Items: [product, nextProduct],
+        ScannedCount: 2,
+        LastEvaluatedKey: {
+          ...lastEvaluatedKey,
+          id: nextProduct.id,
+          createdAtId: nextProduct.createdAtId,
+        },
+      } as never);
+
+      const result = await reader.findAll({
+        pageSize: 1,
+        sortBy: 'createdAt',
+        sortOrder: 'asc',
+        searchTerm: 'notebook',
+      });
+
+      expect(documentClient.send).toHaveBeenCalledOnce();
+      expect(
+        (vi.mocked(documentClient.send).mock.calls[0][0] as QueryCommand).input
+          .Limit,
+      ).toBe(2);
+      expect(result.items.map((item) => item.id)).toEqual([product.id]);
+      expect(cursorCodec.encode).toHaveBeenCalledWith(
+        expect.objectContaining({ lastEvaluatedKey }),
+      );
+    });
+
+    it('adapts later batches using evaluated records rather than returned matches', async () => {
+      vi.mocked(documentClient.send)
+        .mockResolvedValueOnce({
+          Items: [product],
+          ScannedCount: 3,
+          LastEvaluatedKey: lastEvaluatedKey,
+        } as never)
+        .mockResolvedValueOnce({ Items: [], ScannedCount: 12 } as never);
+
+      await reader.findAll({
+        pageSize: 4,
+        sortBy: 'createdAt',
+        sortOrder: 'asc',
+        searchTerm: 'notebook',
+      });
+
+      const limits = vi
+        .mocked(documentClient.send)
+        .mock.calls.map(([command]) => (command as QueryCommand).input.Limit);
+      expect(limits).toEqual([5, 12]);
+    });
+
+    it('caps the first search batch at 100 even for a 100-item page', async () => {
+      vi.mocked(documentClient.send).mockResolvedValueOnce({
+        Items: [],
+      } as never);
+      await reader.findAll({
+        pageSize: 100,
+        sortBy: 'createdAt',
+        sortOrder: 'asc',
+        searchTerm: 'notebook',
+      });
+
+      expect(
+        (vi.mocked(documentClient.send).mock.calls[0][0] as QueryCommand).input
+          .Limit,
+      ).toBe(100);
+    });
+
+    it('should apply search filters on the name index using non-key attributes', async () => {
       vi.mocked(documentClient.send).mockResolvedValueOnce({
         Items: [product],
       } as never);
@@ -202,7 +276,13 @@ describe('ProductsReaderAdapter', () => {
       const command = vi.mocked(documentClient.send).mock
         .calls[0][0] as QueryCommand;
 
-      expect(command.input.FilterExpression).toBeUndefined();
+      expect(command.input.FilterExpression).toBe(
+        'contains(#nameSearch, :searchTerm) OR contains(#descriptionSearch, :searchTerm)',
+      );
+      expect(command.input.ExpressionAttributeNames).toMatchObject({
+        '#nameSearch': 'nameSearch',
+        '#descriptionSearch': 'descriptionSearch',
+      });
       expect(result.items).toEqual([toDomainProduct(product)]);
     });
 
@@ -210,7 +290,8 @@ describe('ProductsReaderAdapter', () => {
       const descriptionMatch = {
         ...product,
         name: 'USB-C Dock',
-        nameSort: 'usb-c dock#product-1',
+        nameSort: 'usb-c dock',
+        nameSearch: 'usb-c dock',
         descriptionSearch: 'compact workstation connector',
       };
       vi.mocked(documentClient.send).mockResolvedValueOnce({
@@ -285,6 +366,11 @@ describe('ProductsReaderAdapter', () => {
       });
 
       expect(documentClient.send).toHaveBeenCalledTimes(5);
+      expect(
+        vi
+          .mocked(documentClient.send)
+          .mock.calls.map(([command]) => (command as QueryCommand).input.Limit),
+      ).toEqual([21, 100, 100, 100, 100]);
       expect(result.items).toEqual([]);
       expect(result.pagination.hasNextPage).toBe(true);
       expect(cursorCodec.encode).toHaveBeenCalledWith(
@@ -351,6 +437,7 @@ describe('ProductsReaderAdapter', () => {
       expect(documentClient.send).toHaveBeenCalledTimes(2);
 
       expect(cursorCodec.encode).toHaveBeenCalledWith({
+        version: 2,
         lastEvaluatedKey,
         sortBy: 'createdAt',
         sortOrder: 'desc',
@@ -366,6 +453,7 @@ describe('ProductsReaderAdapter', () => {
 
     it('should use the cursor when continuing pagination', async () => {
       const cursor: ProductCursor = {
+        version: 2,
         lastEvaluatedKey,
         sortBy: 'createdAt',
         sortOrder: 'desc',
@@ -394,6 +482,7 @@ describe('ProductsReaderAdapter', () => {
 
     it('should reject a cursor with different query parameters', async () => {
       const cursor: ProductCursor = {
+        version: 2,
         lastEvaluatedKey,
         sortBy: 'price',
         sortOrder: 'desc',
@@ -413,6 +502,28 @@ describe('ProductsReaderAdapter', () => {
       expect(documentClient.send).not.toHaveBeenCalled();
     });
 
+    it.each([undefined, 1, 3])(
+      'rejects an incompatible cursor version before querying DynamoDB: %s',
+      async (version) => {
+        vi.mocked(cursorCodec.decode).mockReturnValue({
+          version,
+          lastEvaluatedKey,
+          sortBy: 'name',
+          sortOrder: 'asc',
+        });
+
+        await expect(
+          reader.findAll({
+            pageSize: 1,
+            sortBy: 'name',
+            sortOrder: 'asc',
+            cursor: 'legacy-cursor',
+          }),
+        ).rejects.toThrow(InvalidProductCursorError);
+        expect(documentClient.send).not.toHaveBeenCalled();
+      },
+    );
+
     it('should propagate DynamoDB errors', async () => {
       const error = new Error('DynamoDB unavailable');
 
@@ -429,6 +540,7 @@ describe('ProductsReaderAdapter', () => {
 
     it('should reject a cursor without a valid last evaluated key', async () => {
       vi.mocked(cursorCodec.decode).mockReturnValue({
+        version: 2,
         sortBy: 'createdAt',
         sortOrder: 'desc',
         lastEvaluatedKey: undefined,
@@ -448,6 +560,7 @@ describe('ProductsReaderAdapter', () => {
 
     it('should reject a cursor whose envelope is valid but DynamoDB key is malformed', async () => {
       vi.mocked(cursorCodec.decode).mockReturnValue({
+        version: 2,
         lastEvaluatedKey: {
           id: 123,
           status: ProductStatus.ACTIVE,
@@ -471,6 +584,7 @@ describe('ProductsReaderAdapter', () => {
 
     it('should reject a cursor with a different search term', async () => {
       const cursor: ProductCursor = {
+        version: 2,
         lastEvaluatedKey,
         sortBy: 'createdAt',
         sortOrder: 'desc',
@@ -494,6 +608,7 @@ describe('ProductsReaderAdapter', () => {
 
     it('should allow changing the page size when continuing pagination', async () => {
       const cursor: ProductCursor = {
+        version: 2,
         lastEvaluatedKey,
         sortBy: 'createdAt',
         sortOrder: 'desc',

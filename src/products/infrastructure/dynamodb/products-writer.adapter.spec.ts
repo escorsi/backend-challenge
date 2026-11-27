@@ -49,7 +49,8 @@ describe('ProductsWriterAdapter', () => {
       Item: {
         ...productToCreate,
         createdAtId: `${productToCreate.createdAt}#${productToCreate.id}`,
-        nameSort: `wireless headphones#${productToCreate.id}`,
+        nameSort: 'wireless headphones',
+        nameSearch: 'wireless headphones',
         priceSort: `000000000059990#${productToCreate.id}`,
         descriptionSearch: 'wireless headphones with noise cancellation.',
       },

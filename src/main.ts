@@ -1,10 +1,11 @@
 import { NestFactory } from '@nestjs/core';
 import { ConfigService } from '@nestjs/config';
-import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
+import { SwaggerModule } from '@nestjs/swagger';
 import helmet from 'helmet';
 import type { NextFunction, Request, Response } from 'express';
 
 import { AppModule } from './app.module';
+import { createSwaggerConfig } from './config/swagger.config';
 
 export async function bootstrap() {
   const app = await NestFactory.create(AppModule, { bufferLogs: true });
@@ -42,14 +43,7 @@ export async function bootstrap() {
 
   app.setGlobalPrefix('v1');
 
-  const swaggerConfig = new DocumentBuilder()
-    .setTitle('Ton API')
-    .setDescription('REST API for user authentication and product listing.')
-    .setVersion('1.0.0')
-    .addBearerAuth()
-    .build();
-
-  const document = SwaggerModule.createDocument(app, swaggerConfig);
+  const document = SwaggerModule.createDocument(app, createSwaggerConfig());
 
   SwaggerModule.setup('api', app, document);
 
