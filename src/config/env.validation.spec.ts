@@ -28,8 +28,7 @@ describe('validateEnv', () => {
         NODE_ENV: 'production',
         PORT: '8080',
         AWS_REGION: 'us-west-2',
-        DYNAMODB_ENDPOINT: 'http://localhost:8000',
-        REDIS_URL: 'redis://cache.internal:6379',
+        REDIS_URL: 'rediss://cache.internal:6379',
         TRUSTED_PROXY_CIDRS: '10.0.0.0/8, 192.168.0.0/16',
         METRICS_BEARER_TOKEN: 'a-metrics-token-with-at-least-32-characters',
         JWT_EXPIRES_IN: '30m',
@@ -38,8 +37,7 @@ describe('validateEnv', () => {
       NODE_ENV: 'production',
       PORT: 8080,
       AWS_REGION: 'us-west-2',
-      DYNAMODB_ENDPOINT: 'http://localhost:8000',
-      REDIS_URL: 'redis://cache.internal:6379',
+      REDIS_URL: 'rediss://cache.internal:6379',
       TRUSTED_PROXY_CIDRS: '10.0.0.0/8, 192.168.0.0/16',
       METRICS_BEARER_TOKEN: 'a-metrics-token-with-at-least-32-characters',
       JWT_EXPIRES_IN: '30m',
@@ -86,5 +84,49 @@ describe('validateEnv', () => {
         METRICS_BEARER_TOKEN: 'a-metrics-token-with-at-least-32-characters',
       }),
     ).toThrow('REDIS_URL is required in production');
+  });
+
+  it('rejects local infrastructure endpoints and example secrets in production', () => {
+    const productionConfig = {
+      NODE_ENV: 'production',
+      REDIS_URL: 'redis://cache.internal:6379',
+      METRICS_BEARER_TOKEN: 'a-metrics-token-with-at-least-32-characters',
+      ...requiredSecrets,
+    };
+
+    expect(() =>
+      validateEnv({
+        ...productionConfig,
+        REDIS_URL: 'redis://localhost:6379',
+      }),
+    ).toThrow('REDIS_URL must not point to localhost in production');
+
+    expect(() =>
+      validateEnv({
+        ...productionConfig,
+        REDIS_URL: 'redis://cache.internal:6379',
+      }),
+    ).toThrow('REDIS_URL must use TLS (rediss://) in production');
+
+    expect(() =>
+      validateEnv({
+        ...productionConfig,
+        DYNAMODB_ENDPOINT: 'http://localhost:8000',
+      }),
+    ).toThrow('DYNAMODB_ENDPOINT must not be configured in production');
+
+    expect(() =>
+      validateEnv({
+        ...productionConfig,
+        JWT_SECRET: 'local-development-jwt-secret-change-me-123456',
+      }),
+    ).toThrow('JWT_SECRET must be replaced with a production secret');
+
+    expect(() =>
+      validateEnv({
+        ...productionConfig,
+        CURSOR_SECRET: 'local-development-cursor-secret-change-me-123456',
+      }),
+    ).toThrow('CURSOR_SECRET must be replaced with a production secret');
   });
 });

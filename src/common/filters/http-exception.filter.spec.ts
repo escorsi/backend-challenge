@@ -142,6 +142,9 @@ describe('HttpExceptionFilter', () => {
     expect(JSON.stringify(vi.mocked(logger.error).mock.calls)).not.toContain(
       'exception-secret',
     );
+    expect(jsonMock).toHaveBeenCalledWith(
+      expect.objectContaining({ path: '/v1/users' }),
+    );
   });
 
   it('should include timestamp, request path and request ID', () => {

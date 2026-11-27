@@ -16,6 +16,10 @@ const productsTable = process.env.DYNAMODB_PRODUCTS_TABLE ?? 'products';
 const email = process.env.SEED_USER_EMAIL?.trim().toLowerCase();
 const password = process.env.SEED_USER_PASSWORD;
 
+if (process.env.NODE_ENV === 'production') {
+  throw new Error('The sample seed script cannot run in production.');
+}
+
 if (!email || !password) {
   throw new Error('SEED_USER_EMAIL and SEED_USER_PASSWORD must be configured.');
 }

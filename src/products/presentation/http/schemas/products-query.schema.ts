@@ -16,7 +16,7 @@ export const productsQuerySchema = z.object({
     .max(PRODUCTS_QUERY_LIMIT.MAX)
     .default(PRODUCTS_QUERY_LIMIT.DEFAULT),
 
-  cursor: z.string().min(1).optional(),
+  cursor: z.string().min(1).max(2048).optional(),
 
   sortBy: z.enum(PRODUCTS_SORT_FIELDS).default(PRODUCTS_QUERY_DEFAULTS.sortBy),
 

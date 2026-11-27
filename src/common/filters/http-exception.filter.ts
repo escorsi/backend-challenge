@@ -64,7 +64,7 @@ export class HttpExceptionFilter implements ExceptionFilter {
       code,
       message,
       timestamp: new Date().toISOString(),
-      path: request.url,
+      path: request.path || request.url.split('?')[0] || '/',
       requestId,
     };
 
