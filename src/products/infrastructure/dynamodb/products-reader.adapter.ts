@@ -163,7 +163,6 @@ export class ProductsReaderAdapter implements ProductsReaderPort {
             lastEvaluatedKey: nextPageStartKey,
             sortBy: params.sortBy,
             sortOrder: params.sortOrder,
-            pageSize: params.pageSize,
             searchTerm: normalizedSearchTerm,
           })
         : null;
@@ -171,7 +170,7 @@ export class ProductsReaderAdapter implements ProductsReaderPort {
     return {
       items: pageProducts,
       pagination: {
-        pageSize: params.pageSize,
+        pageSize: pageProducts.length,
         nextCursor,
         hasNextPage,
       },

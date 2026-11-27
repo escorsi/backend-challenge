@@ -52,5 +52,4 @@ describe('CreateUserService', () => {
     expect(result).toEqual({ message: 'Registration request processed.' });
     expect(result).not.toHaveProperty('passwordHash');
   });
-
 });

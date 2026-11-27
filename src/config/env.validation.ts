@@ -13,7 +13,7 @@ const envSchema = z.object({
   DYNAMODB_ENDPOINT: z.url().optional(),
   DYNAMODB_USERS_TABLE: z.string().default('users'),
   DYNAMODB_PRODUCTS_TABLE: z.string().default('products'),
-  
+
   JWT_SECRET: z.string().min(32),
   JWT_EXPIRES_IN: z.string().default('15m'),
 

@@ -11,7 +11,8 @@
     "dynamodb:check": "tsx --env-file=.env scripts/check-dynamodb.ts",
     "dynamodb:setup": "tsx --env-file=.env scripts/create-tables.ts",
     "dynamodb:setup:integration": "tsx --env-file=.env scripts/create-tables.ts --integration",
-    "format": "prettier --write \"src/**/*.ts\" \"test/**/*.ts\"",
+    "format": "prettier --write \"src/**/*.ts\" \"test/**/*.ts\" \"scripts/**/*.ts\" \".github/**/*.yml\" package.json README.md",
+    "format:check": "prettier --check \"src/**/*.ts\" \"test/**/*.ts\" \"scripts/**/*.ts\" \".github/**/*.yml\" package.json README.md",
     "seed": "tsx --env-file=.env scripts/seed.ts",
     "start": "nest start",
     "start:dev": "nest start --watch",
@@ -20,9 +21,10 @@
     "lint": "oxlint --type-aware src/ test/",
     "test": "vitest run",
     "test:watch": "vitest",
-    "test:cov": "vitest run --coverage",
+    "test:cov": "vitest run --coverage --config ./vitest.config.coverage.ts",
     "test:debug": "vitest --inspect-brk --no-file-parallelism",
-    "test:e2e": "vitest run --config ./vitest.config.e2e.ts"
+    "test:e2e": "vitest run --config ./vitest.config.e2e.ts",
+    "test:integration": "vitest run --config ./vitest.config.integration.ts"
   },
   "dependencies": {
     "@aws-sdk/client-dynamodb": "^3.1176.0",

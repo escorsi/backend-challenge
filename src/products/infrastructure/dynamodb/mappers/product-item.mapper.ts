@@ -3,13 +3,19 @@ import type {
   Product,
 } from '../../../domain/models/product.interface';
 import type { ProductItem } from '../models/product-item.interface';
+import { MAX_PRODUCT_PRICE_IN_CENTS } from '../../../domain/constants/product-pricing.constants';
+
+const PRICE_SORT_KEY_WIDTH = String(MAX_PRODUCT_PRICE_IN_CENTS).length;
 
 export function toProductItem(params: CreateProductParams): ProductItem {
   return {
     ...params,
     createdAtId: `${params.createdAt}#${params.id}`,
     nameSort: `${params.name.trim().toLowerCase()}#${params.id}`,
-    priceSort: `${String(params.priceInCents).padStart(15, '0')}#${params.id}`,
+    priceSort: `${String(params.priceInCents).padStart(
+      PRICE_SORT_KEY_WIDTH,
+      '0',
+    )}#${params.id}`,
     descriptionSearch: params.description.trim().toLowerCase(),
   };
 }

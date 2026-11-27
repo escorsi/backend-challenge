@@ -1,7 +1,10 @@
 import { Inject, Injectable } from '@nestjs/common';
 import { z } from 'zod';
 
-import type { FindProductsParams, ProductSortBy } from '../../domain/models/product.interface';
+import type {
+  FindProductsParams,
+  ProductSortBy,
+} from '../../domain/models/product.interface';
 import { ProductStatus } from '../../domain/enums/product-status.enum';
 import { InvalidProductCursorError } from '../../application/errors/invalid-product-cursor.error';
 import {
@@ -21,7 +24,6 @@ const cursorSchema = z.object({
     .refine((key) => Object.keys(key).length > 0),
   sortBy: z.enum(['createdAt', 'name', 'price']),
   sortOrder: z.enum(['asc', 'desc']),
-  pageSize: z.number().int().positive(),
   searchTerm: z.string().optional(),
 });
 
@@ -90,7 +92,6 @@ export class ProductCursorManager {
     const matchesQuery =
       cursor.sortBy === params.sortBy &&
       cursor.sortOrder === params.sortOrder &&
-      cursor.pageSize === params.pageSize &&
       cursor.searchTerm === normalizedSearchTerm;
 
     if (!matchesQuery) {

@@ -18,7 +18,7 @@ export async function bootstrap() {
   if (trustedProxyCidrs.length > 0) {
     app.getHttpAdapter().getInstance().set('trust proxy', trustedProxyCidrs);
   }
-  
+
   app.setGlobalPrefix('v1');
 
   const swaggerConfig = new DocumentBuilder()

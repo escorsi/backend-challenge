@@ -1,10 +1,4 @@
-import {
-  Body,
-  Controller,
-  HttpCode,
-  HttpStatus,
-  Post,
-} from '@nestjs/common';
+import { Body, Controller, HttpCode, HttpStatus, Post } from '@nestjs/common';
 
 import { ApiBody, ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
 
@@ -28,8 +22,7 @@ export class AuthController {
   @Throttle({ default: { limit: 5, ttl: 60_000 } })
   @ApiOperation({
     summary: 'Authenticate User',
-    description:
-      'Authenticates a User and returns a JWT Access Token',
+    description: 'Authenticates a User and returns a JWT Access Token',
   })
   @ApiBody({ type: LoginRequestDto })
   @ApiResponse({

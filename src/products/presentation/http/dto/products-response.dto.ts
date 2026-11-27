@@ -5,8 +5,8 @@ import { ProductResponseDto } from './product-response.dto';
 
 export class ProductsPaginationDto {
   @ApiProperty({
-    example: 20,
-    description: 'Number of products returned per page',
+    example: 1,
+    description: 'Number of products returned in this page.',
   })
   pageSize: number;
 
@@ -44,7 +44,7 @@ export class ProductsResponseDto {
   @ApiProperty({
     type: ProductsPaginationDto,
     example: {
-      pageSize: 20,
+      pageSize: 1,
       nextCursor: 'eyJ2IjoxLCJzb3J0QnkiOi...',
       hasNextPage: true,
     },

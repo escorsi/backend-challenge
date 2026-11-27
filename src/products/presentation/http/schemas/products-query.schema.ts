@@ -6,7 +6,7 @@ import {
   PRODUCTS_SEARCH_LENGTH,
   PRODUCTS_SORT_FIELDS,
   PRODUCTS_SORT_ORDERS,
-} from '../../../infrastructure/dynamodb/constants/products-query.constants';
+} from '../constants/products-query.constants';
 
 export const productsQuerySchema = z.object({
   pageSize: z.coerce

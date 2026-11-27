@@ -1,5 +1,16 @@
 
 services:
+  redis:
+    image: redis:7-alpine
+    container_name: ton-redis
+    ports:
+      - "6379:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
   dynamodb-local:
     image: amazon/dynamodb-local:latest
     container_name: ton-dynamodb-local

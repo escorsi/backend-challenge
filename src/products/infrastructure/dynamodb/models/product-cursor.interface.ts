@@ -13,6 +13,5 @@ export interface ProductCursor {
   lastEvaluatedKey: ProductCursorKey;
   sortBy: ProductSortBy;
   sortOrder: SortOrder;
-  pageSize: number;
   searchTerm?: string;
 }

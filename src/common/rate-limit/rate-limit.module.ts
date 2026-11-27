@@ -8,7 +8,7 @@ import {
 } from '@nestjs-redis/throttler-storage';
 import { ThrottlerGuard, ThrottlerModule } from '@nestjs/throttler';
 
-import { AuthenticatedUserThrottlerGuard } from './authenticated-user-throttler.guard.js';
+import { AuthenticatedUserThrottlerGuard } from './authenticated-user-throttler.guard';
 
 @Global()
 @Module({
