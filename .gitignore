@@ -55,5 +55,15 @@ pids
 *.seed
 *.pid.lock
 
+# Terraform local state and variables
+terraform/.terraform/
+terraform/*.tfstate
+terraform/*.tfstate.*
+terraform/.terraform.tfstate.lock.info
+terraform/crash.log
+terraform/terraform.tfvars
+terraform/*.tfplan
+terraform/*.plan
+
 # Diagnostic reports (https://nodejs.org/api/report.html)
 report.[0-9]*.[0-9]*.[0-9]*.[0-9]*.json

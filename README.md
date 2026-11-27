@@ -75,6 +75,12 @@ Application logs are structured JSON with the originating class, a descriptive m
 
 For production, supply strong secrets and AWS credentials through the deployment environment or a secret manager. Do not deploy the example secrets or use the local DynamoDB endpoint.
 
+## Terraform (AWS DynamoDB)
+
+The [`terraform/`](./terraform/) configuration creates the users and products DynamoDB tables, including the product listing indexes. It uses on-demand billing; production additionally enables point-in-time recovery and deletion protection. Redis remains an external deployment dependency for rate limiting.
+
+See [`terraform/README.md`](./terraform/README.md) for setup, validation, apply, outputs and cost notes. Review the plan before applying it to an AWS account.
+
 ## Tests and quality checks
 
 ```bash
