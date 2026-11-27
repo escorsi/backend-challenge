@@ -1,132 +1,221 @@
-<p align="center">
-  <a href="http://nestjs.com/" target="blank"><img src="https://nestjs.com/img/logo-small.svg" width="120" alt="Nest Logo" /></a>
-</p>
+# Backend Challenge API
 
-[circleci-image]: https://img.shields.io/circleci/build/github/nestjs/nest/master?token=abc123def456
-[circleci-url]: https://circleci.com/gh/nestjs/nest
+REST API built with NestJS for user registration, authentication and product management. It uses DynamoDB for persistence and Redis for rate-limit storage.
 
-  <p align="center">A progressive <a href="http://nodejs.org" target="_blank">Node.js</a> framework for building efficient and scalable server-side applications.</p>
-    <p align="center">
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/v/@nestjs/core.svg" alt="NPM Version" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/l/@nestjs/core.svg" alt="Package License" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/dm/@nestjs/common.svg" alt="NPM Downloads" /></a>
-<a href="https://circleci.com/gh/nestjs/nest" target="_blank"><img src="https://img.shields.io/circleci/build/github/nestjs/nest/master" alt="CircleCI" /></a>
-<a href="https://discord.gg/G7Qnnhy" target="_blank"><img src="https://img.shields.io/badge/discord-online-brightgreen.svg" alt="Discord"/></a>
-<a href="https://opencollective.com/nest#backer" target="_blank"><img src="https://opencollective.com/nest/backers/badge.svg" alt="Backers on Open Collective" /></a>
-<a href="https://opencollective.com/nest#sponsor" target="_blank"><img src="https://opencollective.com/nest/sponsors/badge.svg" alt="Sponsors on Open Collective" /></a>
-  <a href="https://paypal.me/kamilmysliwiec" target="_blank"><img src="https://img.shields.io/badge/Donate-PayPal-ff3f59.svg" alt="Donate us"/></a>
-    <a href="https://opencollective.com/nest#sponsor"  target="_blank"><img src="https://img.shields.io/badge/Support%20us-Open%20Collective-41B883.svg" alt="Support us"></a>
-  <a href="https://twitter.com/nestframework" target="_blank"><img src="https://img.shields.io/twitter/follow/nestframework.svg?style=social&label=Follow" alt="Follow us on Twitter"></a>
-</p>
-  <!--[![Backers on Open Collective](https://opencollective.com/nest/backers/badge.svg)](https://opencollective.com/nest#backer)
-  [![Sponsors on Open Collective](https://opencollective.com/nest/sponsors/badge.svg)](https://opencollective.com/nest#sponsor)-->
+## Requirements
 
-## Description
+- Node.js `22.22.3+`, `24.15+` or `26+` (supported by the locked Nest CLI toolchain)
+- npm (bundled with Node.js)
+- Docker Desktop with Docker Compose v2, or Docker Engine with the Compose plugin
+- Terraform `>= 1.6.0, < 2.0.0` and AWS credentials only if you want to provision the AWS tables (see [`terraform/README.md`](./terraform/README.md))
 
-[Nest](https://github.com/nestjs/nest) framework TypeScript starter repository.
+Check the tools before starting:
 
-## Project setup
-
-```bash
-$ npm install
+```powershell
+node --version
+npm --version
+docker compose version
 ```
 
-## Compile and run the project
+## Run locally
 
-```bash
-# development
-$ npm run start
+From the repository root, install the locked dependencies and create your local environment file:
 
-# watch mode
-$ npm run start:dev
-
-# production mode
-$ npm run start:prod
+```powershell
+npm ci
+Copy-Item .env.example .env
 ```
 
-## Run tests
+On Bash, use `cp .env.example .env` instead. Open `.env` and set `SEED_USER_PASSWORD` to a local password before seeding. Keep `.env` out of version control; it is ignored by Git. The example JWT and cursor secrets are only for local development.
 
-```bash
-# unit tests
-$ npm run test
+Start the local dependencies. The Compose file binds both ports to loopback (`localhost`), so they are not exposed on the network:
 
-# e2e tests
-$ npm run test:e2e
-
-# test coverage
-$ npm run test:cov
+```powershell
+docker compose up -d
+docker compose ps
 ```
 
-## Deployment
+Create the DynamoDB tables and indexes, then insert the local administrator and sample products:
 
-When you're ready to deploy your NestJS application to production, there are some key steps you can take to ensure it runs as efficiently as possible. Check out the [deployment documentation](https://docs.nestjs.com/deployment) for more information.
-
-If you are looking for a cloud-based platform to deploy your NestJS application, check out [Mau](https://mau.nestjs.com), our official platform for deploying NestJS applications on AWS. Mau makes deployment straightforward and fast, requiring just a few simple steps:
-
-```bash
-$ npm install -g @nestjs/mau
-$ mau deploy
+```powershell
+npm run dynamodb:check
+npm run dynamodb:setup
+npm run seed
 ```
 
-With Mau, you can deploy your application in just a few clicks, allowing you to focus on building features rather than managing infrastructure.
+`dynamodb:setup` creates or validates the configured users and products tables and their indexes; it does not insert records. `seed` creates the administrator from `SEED_USER_EMAIL` and `SEED_USER_PASSWORD`, three active products and one inactive product. It only inserts missing records, so it is safe to rerun without overwriting existing data. This sample seed refuses to run when `NODE_ENV=production` and is intended for local/demo environments.
 
-## Observability
+Start the API in a separate terminal:
 
-In production applications, observability is essential for understanding how your system behaves, detecting issues early, and maintaining reliable performance.
-
-[NestJS Observe](https://observe.nestjs.com) automatically instruments your NestJS application, giving you deep visibility into your system with minimal setup:
-
-- **Distributed tracing:** Follow requests across services and understand how they flow through your system.
-- **Waterfall analysis:** Visualize request execution and identify slow operations, bottlenecks, and unexpected delays.
-- **Performance analysis:** Analyze application performance in real time and quickly pinpoint areas that need optimization.
-- **Metrics:** Track key application and infrastructure metrics to understand system health and performance trends.
-- **Logging:** Centralize and correlate logs with traces and other telemetry to make debugging easier.
-- **Error tracking:** Detect errors quickly and investigate their root causes with the surrounding context.
-- **SLA monitoring:** Track service-level objectives and identify when your application is approaching or exceeding defined thresholds.
-- **Alarms and alerts:** Set up alerts for critical errors, performance degradation, SLA violations, and other anomalies so your team can react quickly.
-
-To add it to this project, run this and approve the code it prints at [observe.nestjs.com/link](https://observe.nestjs.com/link) - signing up for free if you have no account:
-
-```bash
-$ npx @nestjs/observe link
+```powershell
+npm run start:dev
 ```
 
-It installs `@nestjs/observe`, wires it into `AppModule` and `main.ts`, and writes the app key and secret into `.env`, which every `nest start` script (`start`, `start:dev`, `start:debug`) then loads. In production, set `OBSERVE_APP_KEY` and `OBSERVE_APP_SECRET` in the environment instead.
+The API listens at `http://localhost:3000`. Swagger UI is available at `http://localhost:3000/api`.
 
-Or do it by hand:
+To try the protected product endpoints, use the seeded email/password with `POST /v1/auth/login` in Swagger. The example email is `admin@example.com` unless changed in `.env`; the password is the value you set in `SEED_USER_PASSWORD`. Click **Authorize** and enter the returned `accessToken`; Swagger sends it as a bearer token. `GET /v1/products` is available to authenticated users, while `POST /v1/products` requires the seeded `ADMIN` account. Public registration (`POST /v1/users`) always creates a `USER`, not an administrator.
 
-```bash
-$ npm install @nestjs/observe
+The health endpoint is `GET /v1/actuator/health`. It is a liveness check and does not test Redis or DynamoDB. DynamoDB Local runs in memory; its tables and data are lost when its container is removed or restarted. The local Redis service has no persistent volume, so its rate-limit counters are also temporary.
+
+To stop local dependencies:
+
+```powershell
+docker compose down
 ```
 
-Then follow the [setup guide](https://docs.nestjs.com/observability/sdk) - it takes a single import and an app key.
+If Docker reports that port `6379` or `8000` is already in use, stop the process using that port or change the host-side port mapping in `docker-compose.yml` and update the corresponding `.env` URL.
 
-The free plan needs no payment details and covers 300,000 events a month. You can also browse the [live demo](https://www.observe-demo.nestjs.com/dashboard) first - the whole dashboard over a busy service's data, with nothing to install.
+If a local service is unavailable, inspect its status and logs with:
 
-## Resources
+```powershell
+docker compose ps
+docker compose logs redis dynamodb-local
+```
 
-Check out a few resources that may come in handy when working with NestJS:
+## HTTP API
 
-- Visit the [NestJS Documentation](https://docs.nestjs.com) to learn more about the framework.
-- For questions and support, please visit our [Discord channel](https://discord.gg/G7Qnnhy).
-- To dive deeper and get more hands-on experience, check out our official video [courses](https://courses.nestjs.com/).
-- Deploy your application to AWS with the help of [NestJS Mau](https://mau.nestjs.com) in just a few clicks.
-- Auto-instrument your application with [NestJS Observe](https://observe.nestjs.com). Distributed tracing, metrics, and logging made easy. Error tracking and performance monitoring for your NestJS applications.
-- Visualize your application graph and interact with the NestJS application in real-time using [NestJS Devtools](https://devtools.nestjs.com).
-- Need help with your project (part-time to full-time)? Check out our official [enterprise support](https://enterprise.nestjs.com).
-- To stay in the loop and get updates, follow us on [X](https://x.com/nestframework) and [LinkedIn](https://linkedin.com/company/nestjs).
-- Looking for a job, or have a job to offer? Check out our official [Jobs board](https://jobs.nestjs.com).
+All application routes use the `/v1` prefix.
 
-## Support
+| Method | Route                     | Access        | Rate limit                          | Description                                                     |
+| ------ | ------------------------- | ------------- | ----------------------------------- | --------------------------------------------------------------- |
+| `POST` | `/v1/auth/login`          | Public        | 5/minute per IP                     | Authenticate and receive a bearer token                         |
+| `POST` | `/v1/users`               | Public        | 5/minute per IP                     | Register a user; the server always assigns the `USER` role      |
+| `GET`  | `/v1/products`            | JWT           | 100/minute per user, plus global IP | List active products with cursor pagination, sorting and search |
+| `POST` | `/v1/products`            | JWT + `ADMIN` | 10/minute per user, plus global IP  | Create an active product                                        |
+| `GET`  | `/v1/actuator/health`     | Public        | Skips application throttling        | Liveness check; does not probe external dependencies            |
+| `GET`  | `/v1/actuator/prometheus` | Bearer token  | Global IP limit                     | Prometheus metrics                                              |
 
-Nest is an MIT-licensed open source project. It can grow thanks to the sponsors and support by the amazing backers. If you'd like to join them, please [read more here](https://docs.nestjs.com/support).
+The global limit is 100 requests per minute per client IP. Product routes also have a per-authenticated-user limit. Login and registration use their stricter per-IP limit. Counters are stored in Redis and shared between API instances. The liveness endpoint is exempt so it remains available when Redis is unavailable; expose it only to internal probes or protect it at the ingress/load balancer.
 
-## Stay in touch
+Register with `name`, `email` and `password`; the request rejects extra fields such as `role`. Login accepts `email` and `password`. Passwords must be between 8 and 128 characters on registration. The API stores an Argon2id hash and never returns it. User registration currently responds with HTTP 200.
 
-- Author - [Kamil Myśliwiec](https://twitter.com/kammysliwiec)
-- Website - [https://nestjs.com](https://nestjs.com/)
-- Twitter - [@nestframework](https://twitter.com/nestframework)
+Log in through `/v1/auth/login` and send the returned token as `Authorization: Bearer <token>` to protected routes. Swagger's **Authorize** dialog accepts the bearer token. Product creation accepts `name`, `description` and `priceInCents`; the server sets the status to `ACTIVE`, and clients cannot supply a status.
 
-## License
+Product listing query parameters:
 
-Nest is [MIT licensed](https://github.com/nestjs/nest/blob/master/LICENSE).
+| Parameter   | Values / range                           | Default     |
+| ----------- | ---------------------------------------- | ----------- |
+| `pageSize`  | Integer from 1 to 100                    | `20`        |
+| `cursor`    | Signed cursor from the previous response | None        |
+| `sortBy`    | `createdAt`, `name` or `price`           | `createdAt` |
+| `sortOrder` | `asc` or `desc`                          | `desc`      |
+| `search`    | Text from 1 to 100 characters            | None        |
+
+Example:
+
+```http
+GET /v1/products?pageSize=20&sortBy=createdAt&sortOrder=desc&search=keyboard
+Authorization: Bearer <accessToken>
+```
+
+The response contains `items` and `pagination`. `pagination.pageSize` is the number of products returned on that page. For the next page, pass `pagination.nextCursor` as `cursor` and keep `sortBy`, `sortOrder` and `search` unchanged. The cursor is signed with `CURSOR_SECRET` and cannot be reused with different query settings.
+
+Public registration intentionally does not require authentication. The request schema rejects additional fields such as `role`, and the application always assigns `USER` on the server. Product creation remains restricted to `ADMIN`.
+
+Configure `TRUSTED_PROXY_CIDRS` only with the exact CIDRs of proxies you control. The setting is empty by default; do not trust all proxies. The client IP is used for the global, login and registration limits.
+
+Each request receives a UUID returned in the `X-Request-Id` response header and made available to application logs. Logs are structured JSON with the originating class and a descriptive message. Common secret formats are redacted centrally. Keep messages static and do not pass request bodies, credentials, tokens, exception messages or other user data to the logger.
+
+The metrics endpoint requires `Authorization: Bearer <METRICS_BEARER_TOKEN>` in every environment. `METRICS_BEARER_TOKEN` is required in production and must contain at least 32 characters. The health endpoint is a liveness check only; Redis and DynamoDB availability are not checked there.
+
+## Configuration
+
+Use `.env.example` as a local configuration template. The table below documents the supported variables; omit optional variables when they are not configured because an empty string is not always equivalent to an omitted variable.
+
+| Variable                  | Purpose                                    | Default / requirement                                              |
+| ------------------------- | ------------------------------------------ | ------------------------------------------------------------------ |
+| `NODE_ENV`                | Runtime environment                        | `development`; accepts `development`, `test` or `production`       |
+| `PORT`                    | HTTP port                                  | `3000`                                                             |
+| `REDIS_URL`               | Shared rate-limit storage                  | `redis://localhost:6379` locally; remote `rediss://` in production |
+| `AWS_REGION`              | DynamoDB region                            | `us-east-1`                                                        |
+| `DYNAMODB_ENDPOINT`       | DynamoDB Local endpoint                    | `http://localhost:8000` locally; forbidden in production           |
+| `DYNAMODB_USERS_TABLE`    | Users table name                           | `users`                                                            |
+| `DYNAMODB_PRODUCTS_TABLE` | Products table name                        | `products`                                                         |
+| `TRUSTED_PROXY_CIDRS`     | Comma-separated CIDRs for trusted proxies  | Empty; proxy trust disabled                                        |
+| `JWT_SECRET`              | JWT signing secret                         | Required; at least 32 characters; example rejected in production   |
+| `JWT_EXPIRES_IN`          | Access-token lifetime                      | `15m`; positive integer with unit `s`, `m`, `h`, `d` or `w`        |
+| `CURSOR_SECRET`           | HMAC key for product cursors               | Required; at least 32 characters; example rejected in production   |
+| `METRICS_BEARER_TOKEN`    | Bearer token protecting Prometheus metrics | Required in production; at least 32 characters when set            |
+| `SEED_USER_EMAIL`         | Email for the local seed administrator     | Optional in app config; required to run the seed script            |
+| `SEED_USER_PASSWORD`      | Password for the local seed administrator  | Optional in app config; required to run the seed script            |
+
+For production, supply strong secrets and AWS credentials through the deployment environment or a secret manager. The application rejects the example JWT/cursor secrets, localhost or non-TLS Redis URLs, and a custom DynamoDB endpoint. The sample seed script also refuses to run when `NODE_ENV=production`.
+
+## Architecture
+
+The application is organized by feature, with HTTP, application, domain and infrastructure responsibilities kept separate:
+
+| Path                    | Responsibility                                                                                  |
+| ----------------------- | ----------------------------------------------------------------------------------------------- |
+| `src/auth`              | Login, JWT issuance and authentication strategy                                                 |
+| `src/users`             | Public user registration and user persistence                                                   |
+| `src/products`          | Product use cases, HTTP API, cursor handling and DynamoDB adapters                              |
+| `src/actuator`          | Liveness and Prometheus metrics endpoints                                                       |
+| `src/common`            | HTTP validation, request ID middleware, exception handling and rate-limit guards                |
+| `src/shared`            | Shared application ports and adapters such as logging, request context, clock and ID generation |
+| `src/database/dynamodb` | DynamoDB client creation and dependency injection                                               |
+| `src/config`            | Environment-variable validation                                                                 |
+| `scripts`               | DynamoDB table setup, connectivity check and sample data seed                                   |
+
+Within a feature, controllers validate and map HTTP data, application use cases coordinate the work through ports, and infrastructure adapters implement those ports. Nest modules connect implementations through dependency injection. For example, product creation flows from the controller to the use case, then through the products writer port to its DynamoDB adapter.
+
+## DynamoDB model and product search
+
+| Table    | Partition key | Indexes                                                              |
+| -------- | ------------- | -------------------------------------------------------------------- |
+| Users    | `email`       | None                                                                 |
+| Products | `id`          | `status-created-at-index`, `status-name-index`, `status-price-index` |
+
+The product indexes partition by `status` and sort by the selected field. The API queries only `ACTIVE` products. Global secondary indexes are eventually consistent, so a newly created product can take a short time to appear in a listing.
+
+Search uses DynamoDB query filters, which are applied after items are read. The first batch requests the remaining page size plus one lookahead item, capped at 100. Later batches adapt to the observed match rate using DynamoDB's `ScannedCount`; a batch with no matches allows the next query to evaluate up to 100 items. Each search request makes at most five queries, each capped at 100 evaluated items. Dense searches with `pageSize=1` start with two evaluated items rather than a fixed batch of 100. A search page can contain fewer items than requested, or none, while still returning a `nextCursor`. Continue until the cursor is `null`. This keeps each request bounded; broad text search over a large catalog may need a dedicated search service later.
+
+## Terraform (AWS DynamoDB)
+
+The [`terraform/`](./terraform/) configuration creates the users and products DynamoDB tables, including the product listing indexes. It uses on-demand billing; production additionally enables point-in-time recovery and deletion protection. Redis remains an external deployment dependency for rate limiting.
+
+This is separate from the local Docker setup: Terraform provisions real AWS DynamoDB resources and can incur charges. For a local run, use DynamoDB Local and `npm run dynamodb:setup`; do not run Terraform just to start the API locally. The Terraform guide includes the AWS credential setup, PowerShell and Bash commands, validation, plan/apply, outputs and teardown steps. Review the plan before applying it to an AWS account.
+
+## Tests and quality checks
+
+```bash
+npm test                 # unit tests
+npm run test:e2e          # HTTP end-to-end tests
+npm run test:cov          # unit + e2e tests with coverage thresholds
+npm run test:integration  # DynamoDB integration tests
+npm run lint
+npm run format:check
+npm run build
+```
+
+`npm test` runs the unit specs under `src/` and does not need Docker. The end-to-end suite starts the HTTP application and uses the local Redis rate-limit store, so Redis must be available. `npm run test:cov` includes the unit and e2e specs, but not integration specs; the current minimum is 80% for statements, branches, lines and functions, as configured in `vitest.config.coverage.mts`. Integration specs use separate `users-integration` and `products-integration` tables in DynamoDB Local and also require Redis. `npm run test:integration` creates or validates those tables before running.
+
+To run the integration suite locally:
+
+```powershell
+docker compose up -d
+npm run test:integration
+```
+
+The Compose DynamoDB Local service runs in memory, so its data is lost when the container is restarted. Run the integration suite only against the supplied local services or another disposable test environment; it writes test records to the integration tables.
+
+## Useful local commands
+
+```bash
+npm run dynamodb:check    # check the configured DynamoDB endpoint
+npm run dynamodb:setup    # create or validate application tables and indexes
+npm run seed              # add the local administrator and sample products
+npm run start:prod        # run the compiled application after npm run build
+```
+
+## Use of AI
+
+AI tools were used as an engineering aid during this project, with the author reviewing and integrating the resulting changes. Assistance included:
+
+- Reviewing application code and discussing security risks, including authentication/authorization boundaries, rate limiting, validation, data exposure and dependency vulnerabilities.
+- Improving the documentation and adding or refining Swagger request/response examples.
+- Expanding unit, end-to-end and integration test cases, then helping diagnose failures and improve coverage.
+- Understanding the DynamoDB data model, local setup and table/index scripts.
+- Drafting and reviewing the Terraform configuration and its usage documentation, especially the AWS DynamoDB tables, indexes, environment safeguards and validation workflow.
+
+See [`AI_USAGE.md`](./AI_USAGE.md) for the scope and review boundaries.
