@@ -1,6 +1,8 @@
 import { NestFactory } from '@nestjs/core';
 import { ConfigService } from '@nestjs/config';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
+import helmet from 'helmet';
+import type { NextFunction, Request, Response } from 'express';
 
 import { AppModule } from './app.module';
 
@@ -8,6 +10,25 @@ export async function bootstrap() {
   const app = await NestFactory.create(AppModule, { bufferLogs: true });
   app.enableShutdownHooks();
   const configService = app.get(ConfigService);
+  const helmetOptions =
+    configService.get<string>('NODE_ENV') === 'production'
+      ? {}
+      : { strictTransportSecurity: false as const };
+  const apiSecurityHeaders = helmet(helmetOptions);
+  const swaggerSecurityHeaders = helmet({
+    ...helmetOptions,
+    contentSecurityPolicy: false,
+  });
+
+  app.use((request: Request, response: Response, next: NextFunction) => {
+    const isSwaggerPath =
+      request.path === '/api' || request.path.startsWith('/api/');
+    const middleware = isSwaggerPath
+      ? swaggerSecurityHeaders
+      : apiSecurityHeaders;
+
+    middleware(request, response, next);
+  });
 
   const trustedProxyCidrs = configService
     .get<string>('TRUSTED_PROXY_CIDRS', '')
@@ -22,8 +43,8 @@ export async function bootstrap() {
   app.setGlobalPrefix('v1');
 
   const swaggerConfig = new DocumentBuilder()
-    .setTitle('Stone Backend Challenge API')
-    .setDescription('API for User Authentication and Product Listing.')
+    .setTitle('Ton API')
+    .setDescription('REST API for user authentication and product listing.')
     .setVersion('1.0.0')
     .addBearerAuth()
     .build();

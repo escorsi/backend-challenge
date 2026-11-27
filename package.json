@@ -24,6 +24,7 @@
     "test:cov": "vitest run --coverage --config ./vitest.config.coverage.ts",
     "test:debug": "vitest --inspect-brk --no-file-parallelism",
     "test:e2e": "vitest run --config ./vitest.config.e2e.ts",
+    "pretest:integration": "npm run dynamodb:setup:integration",
     "test:integration": "vitest run --config ./vitest.config.integration.ts"
   },
   "dependencies": {
@@ -42,6 +43,7 @@
     "@nestjs/throttler": "^6.8.0",
     "@prometheus-io/client": "^0.16.1",
     "argon2": "^0.45.2",
+    "helmet": "^8.3.0",
     "passport": "^0.7.0",
     "passport-jwt": "^4.0.1",
     "redis": "^6.4.0",
