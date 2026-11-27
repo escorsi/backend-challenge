@@ -9,6 +9,14 @@ import { Request, Response } from 'express';
 import { HttpExceptionFilter } from './http-exception.filter';
 import { InvalidCredentialsError } from '../../auth/application/errors/invalid-credentials.error';
 import { InvalidProductCursorError } from '../../products/application/errors/invalid-product-cursor.error';
+import { ApplicationError } from '../../shared/application/errors/application.error';
+import { ApplicationErrorCode } from '../../shared/application/errors/application-error-code.enum';
+
+class UnmappedApplicationError extends ApplicationError {
+  constructor() {
+    super('UNMAPPED' as ApplicationErrorCode, 'Sensitive internal detail');
+  }
+}
 
 describe('HttpExceptionFilter', () => {
   let filter: HttpExceptionFilter;
@@ -175,6 +183,43 @@ describe('HttpExceptionFilter', () => {
         statusCode: 429,
         code: 'RATE_LIMIT_EXCEEDED',
         requestId: 'test-request-id',
+      }),
+    );
+  });
+
+  it('should use safe fallbacks for unmapped HTTP errors and unmatched routes', () => {
+    request.route = undefined as Request['route'];
+    const loggerSpy = vi
+      .spyOn(Logger.prototype, 'warn')
+      .mockImplementation(() => undefined);
+    const exception = new HttpException(
+      { error: 'Unprocessable Entity' },
+      HttpStatus.UNPROCESSABLE_ENTITY,
+    );
+
+    filter.catch(exception, createArgumentsHost());
+
+    expect(jsonMock).toHaveBeenCalledWith(
+      expect.objectContaining({
+        statusCode: HttpStatus.UNPROCESSABLE_ENTITY,
+        code: 'HTTP_ERROR',
+        message: 'Request failed',
+      }),
+    );
+    expect(loggerSpy).toHaveBeenCalledWith(
+      'HTTP 422 GET unmatched HTTP_ERROR requestId=test-request-id',
+    );
+    loggerSpy.mockRestore();
+  });
+
+  it('should hide details for application errors without an HTTP mapping', () => {
+    filter.catch(new UnmappedApplicationError(), createArgumentsHost());
+
+    expect(statusMock).toHaveBeenCalledWith(HttpStatus.INTERNAL_SERVER_ERROR);
+    expect(jsonMock).toHaveBeenCalledWith(
+      expect.objectContaining({
+        statusCode: HttpStatus.INTERNAL_SERVER_ERROR,
+        message: 'Internal server error',
       }),
     );
   });

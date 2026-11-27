@@ -103,6 +103,25 @@ describe('ProductsReaderAdapter', () => {
       });
     });
 
+    it('should return an empty page when DynamoDB omits Items', async () => {
+      vi.mocked(documentClient.send).mockResolvedValueOnce({} as never);
+
+      await expect(
+        reader.findAll({
+          pageSize: 20,
+          sortBy: 'createdAt',
+          sortOrder: 'desc',
+        }),
+      ).resolves.toEqual({
+        items: [],
+        pagination: {
+          pageSize: 0,
+          nextCursor: null,
+          hasNextPage: false,
+        },
+      });
+    });
+
     it('should use the name index when sorting by name', async () => {
       vi.mocked(documentClient.send).mockResolvedValueOnce({
         Items: [product],
@@ -185,6 +204,27 @@ describe('ProductsReaderAdapter', () => {
 
       expect(command.input.FilterExpression).toBeUndefined();
       expect(result.items).toEqual([toDomainProduct(product)]);
+    });
+
+    it('should match a name-index search against the description when the name does not match', async () => {
+      const descriptionMatch = {
+        ...product,
+        name: 'USB-C Dock',
+        nameSort: 'usb-c dock#product-1',
+        descriptionSearch: 'compact workstation connector',
+      };
+      vi.mocked(documentClient.send).mockResolvedValueOnce({
+        Items: [descriptionMatch],
+      } as never);
+
+      const result = await reader.findAll({
+        pageSize: 20,
+        sortBy: 'name',
+        sortOrder: 'asc',
+        searchTerm: 'workstation',
+      });
+
+      expect(result.items).toEqual([toDomainProduct(descriptionMatch)]);
     });
 
     it('should preserve unreturned matches when a search batch exceeds the page size', async () => {
@@ -400,6 +440,29 @@ describe('ProductsReaderAdapter', () => {
           sortBy: 'createdAt',
           sortOrder: 'desc',
           cursor: 'invalid-cursor',
+        }),
+      ).rejects.toThrow(InvalidProductCursorError);
+
+      expect(documentClient.send).not.toHaveBeenCalled();
+    });
+
+    it('should reject a cursor whose envelope is valid but DynamoDB key is malformed', async () => {
+      vi.mocked(cursorCodec.decode).mockReturnValue({
+        lastEvaluatedKey: {
+          id: 123,
+          status: ProductStatus.ACTIVE,
+          createdAtId: lastEvaluatedKey.createdAtId,
+        },
+        sortBy: 'createdAt',
+        sortOrder: 'desc',
+      } as unknown as ProductCursor);
+
+      await expect(
+        reader.findAll({
+          pageSize: 20,
+          sortBy: 'createdAt',
+          sortOrder: 'desc',
+          cursor: 'signed-cursor',
         }),
       ).rejects.toThrow(InvalidProductCursorError);
 

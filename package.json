@@ -11,8 +11,8 @@
     "dynamodb:check": "tsx --env-file=.env scripts/check-dynamodb.ts",
     "dynamodb:setup": "tsx --env-file=.env scripts/create-tables.ts",
     "dynamodb:setup:integration": "tsx --env-file=.env scripts/create-tables.ts --integration",
-    "format": "prettier --write \"src/**/*.ts\" \"test/**/*.ts\" \"scripts/**/*.ts\" \".github/**/*.yml\" package.json README.md",
-    "format:check": "prettier --check \"src/**/*.ts\" \"test/**/*.ts\" \"scripts/**/*.ts\" \".github/**/*.yml\" package.json README.md",
+    "format": "prettier --write \"src/**/*.ts\" \"test/**/*.ts\" \"scripts/**/*.ts\" \"*.config.{ts,mts}\" package.json README.md",
+    "format:check": "prettier --check \"src/**/*.ts\" \"test/**/*.ts\" \"scripts/**/*.ts\" \"*.config.{ts,mts}\" package.json README.md",
     "seed": "tsx --env-file=.env scripts/seed.ts",
     "start": "nest start",
     "start:dev": "nest start --watch",
@@ -21,13 +21,11 @@
     "lint": "oxlint --type-aware src/ test/",
     "test": "vitest run",
     "test:watch": "vitest",
-    "test:cov": "vitest run --coverage --config ./vitest.config.coverage.ts",
-    "validate": "npm run lint && npm run format:check && npm run test:cov && npm run build",
+    "test:cov": "vitest run --coverage --config ./vitest.config.coverage.mts",
     "test:debug": "vitest --inspect-brk --no-file-parallelism",
     "test:e2e": "vitest run --config ./vitest.config.e2e.ts",
     "pretest:integration": "tsx scripts/create-tables.ts --integration",
-    "test:integration": "vitest run --config ./vitest.config.integration.ts",
-    "prepare": "husky"
+    "test:integration": "vitest run --config ./vitest.config.integration.ts"
   },
   "dependencies": {
     "@aws-sdk/client-dynamodb": "^3.1176.0",
@@ -62,8 +60,6 @@
     "@types/passport-jwt": "^4.0.2",
     "@types/supertest": "^7.0.0",
     "@vitest/coverage-v8": "^4.1.2",
-    "husky": "^9.1.7",
-    "lint-staged": "^17.6.2",
     "oxlint": "^1.58.0",
     "oxlint-tsgolint": "^7.0.2001",
     "prettier": "^3.4.2",
@@ -73,12 +69,5 @@
     "typescript": "^6.0.2",
     "vite": "^8.0.0",
     "vitest": "^4.1.2"
-  },
-  "lint-staged": {
-    "*.{ts,tsx,js,mjs,cjs}": [
-      "prettier --write",
-      "oxlint --type-aware"
-    ],
-    "*.{json,md,yml,yaml}": "prettier --write"
   }
 }

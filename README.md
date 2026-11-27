@@ -1,132 +1,98 @@
-<p align="center">
-  <a href="http://nestjs.com/" target="blank"><img src="https://nestjs.com/img/logo-small.svg" width="120" alt="Nest Logo" /></a>
-</p>
+# Backend Challenge API
 
-[circleci-image]: https://img.shields.io/circleci/build/github/nestjs/nest/master?token=abc123def456
-[circleci-url]: https://circleci.com/gh/nestjs/nest
+REST API built with NestJS for user registration, authentication and product management. It uses DynamoDB for persistence and Redis for rate-limit storage.
 
-  <p align="center">A progressive <a href="http://nodejs.org" target="_blank">Node.js</a> framework for building efficient and scalable server-side applications.</p>
-    <p align="center">
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/v/@nestjs/core.svg" alt="NPM Version" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/l/@nestjs/core.svg" alt="Package License" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/dm/@nestjs/common.svg" alt="NPM Downloads" /></a>
-<a href="https://circleci.com/gh/nestjs/nest" target="_blank"><img src="https://img.shields.io/circleci/build/github/nestjs/nest/master" alt="CircleCI" /></a>
-<a href="https://discord.gg/G7Qnnhy" target="_blank"><img src="https://img.shields.io/badge/discord-online-brightgreen.svg" alt="Discord"/></a>
-<a href="https://opencollective.com/nest#backer" target="_blank"><img src="https://opencollective.com/nest/backers/badge.svg" alt="Backers on Open Collective" /></a>
-<a href="https://opencollective.com/nest#sponsor" target="_blank"><img src="https://opencollective.com/nest/sponsors/badge.svg" alt="Sponsors on Open Collective" /></a>
-  <a href="https://paypal.me/kamilmysliwiec" target="_blank"><img src="https://img.shields.io/badge/Donate-PayPal-ff3f59.svg" alt="Donate us"/></a>
-    <a href="https://opencollective.com/nest#sponsor"  target="_blank"><img src="https://img.shields.io/badge/Support%20us-Open%20Collective-41B883.svg" alt="Support us"></a>
-  <a href="https://twitter.com/nestframework" target="_blank"><img src="https://img.shields.io/twitter/follow/nestframework.svg?style=social&label=Follow" alt="Follow us on Twitter"></a>
-</p>
-  <!--[![Backers on Open Collective](https://opencollective.com/nest/backers/badge.svg)](https://opencollective.com/nest#backer)
-  [![Sponsors on Open Collective](https://opencollective.com/nest/sponsors/badge.svg)](https://opencollective.com/nest#sponsor)-->
+## Requirements
 
-## Description
+- Node.js `20.19+` or `22.12+` (Vite 8 requirement)
+- npm
+- Docker Compose
 
-[Nest](https://github.com/nestjs/nest) framework TypeScript starter repository.
+## Run locally
 
-## Project setup
+Install the dependencies and create the local environment file:
 
-```bash
-$ npm install
+```powershell
+npm ci
+Copy-Item .env.example .env
 ```
 
-## Compile and run the project
+On Bash, use `cp .env.example .env` instead. Before seeding, set `SEED_USER_PASSWORD` in `.env` to a local password. The example JWT and cursor secrets are for local development only.
+
+Start DynamoDB Local and Redis, then create the tables and seed the data:
 
 ```bash
-# development
-$ npm run start
-
-# watch mode
-$ npm run start:dev
-
-# production mode
-$ npm run start:prod
+docker compose up -d
+npm run dynamodb:setup
+npm run seed
 ```
 
-## Run tests
+Start the API:
 
 ```bash
-# unit tests
-$ npm run test
-
-# e2e tests
-$ npm run test:e2e
-
-# test coverage
-$ npm run test:cov
+npm run start:dev
 ```
 
-## Deployment
+The API listens at `http://localhost:3000`. Swagger UI is available at `http://localhost:3000/api`.
 
-When you're ready to deploy your NestJS application to production, there are some key steps you can take to ensure it runs as efficiently as possible. Check out the [deployment documentation](https://docs.nestjs.com/deployment) for more information.
+The seed creates an administrator using `SEED_USER_EMAIL` and `SEED_USER_PASSWORD`, three active products and one inactive product. The product listing only returns active products. The seed is safe to rerun: existing records are not overwritten.
 
-If you are looking for a cloud-based platform to deploy your NestJS application, check out [Mau](https://mau.nestjs.com), our official platform for deploying NestJS applications on AWS. Mau makes deployment straightforward and fast, requiring just a few simple steps:
+## HTTP API
+
+All application routes use the `/v1` prefix.
+
+| Method | Route                     | Access        | Description                                                     |
+| ------ | ------------------------- | ------------- | --------------------------------------------------------------- |
+| `POST` | `/v1/auth/login`          | Public        | Authenticate and receive a bearer token                         |
+| `POST` | `/v1/users`               | Public        | Register a user; the server always assigns the `USER` role      |
+| `GET`  | `/v1/products`            | Authenticated | List active products with cursor pagination, sorting and search |
+| `POST` | `/v1/products`            | `ADMIN`       | Create an active product                                        |
+| `GET`  | `/v1/actuator/health`     | Public        | Liveness check                                                  |
+| `GET`  | `/v1/actuator/prometheus` | Bearer token  | Prometheus metrics                                              |
+
+Log in through `/v1/auth/login` and send the returned token as `Authorization: Bearer <token>` to protected routes. Swagger's **Authorize** dialog accepts the bearer token.
+
+Product listing supports `pageSize`, `cursor`, `sortBy` (`createdAt`, `name` or `price`), `sortOrder` (`asc` or `desc`) and `search`. The response's `pagination.pageSize` is the number of products returned on that page.
+
+Public registration intentionally does not require authentication. The request schema rejects additional fields such as `role`, and the application always assigns `USER` on the server. Product creation remains restricted to `ADMIN`.
+
+The default rate limits are stored in Redis: a global limit is applied by client IP, with stricter limits for login and registration and a per-authenticated-user limit for product routes. Configure `TRUSTED_PROXY_CIDRS` only for proxy addresses you control.
+
+## Configuration
+
+`.env.example` lists the supported variables and local defaults. The main settings are:
+
+- `REDIS_URL`: Redis connection URL.
+- `AWS_REGION`, `DYNAMODB_ENDPOINT`: DynamoDB region and optional endpoint. Set the endpoint for local DynamoDB; omit it when using AWS.
+- `DYNAMODB_USERS_TABLE`, `DYNAMODB_PRODUCTS_TABLE`: table names.
+- `JWT_SECRET`, `JWT_EXPIRES_IN`: access-token signing secret and lifetime.
+- `CURSOR_SECRET`: secret used to sign product pagination cursors.
+- `SEED_USER_EMAIL`, `SEED_USER_PASSWORD`: local seed administrator credentials.
+- `METRICS_BEARER_TOKEN`: protects the metrics endpoint; required in production and must be at least 32 characters.
+- `TRUSTED_PROXY_CIDRS`: comma-separated trusted proxy CIDRs, if the app runs behind a proxy.
+
+For production, supply strong secrets and AWS credentials through the deployment environment or a secret manager. Do not deploy the example secrets or use the local DynamoDB endpoint.
+
+## Tests and quality checks
 
 ```bash
-$ npm install -g @nestjs/mau
-$ mau deploy
+npm test                 # unit tests
+npm run test:e2e          # HTTP end-to-end tests
+npm run test:cov          # unit + e2e tests and coverage thresholds
+npm run test:integration  # DynamoDB integration tests
+npm run lint
+npm run format:check
+npm run build
 ```
 
-With Mau, you can deploy your application in just a few clicks, allowing you to focus on building features rather than managing infrastructure.
+Coverage is enforced at 90% or higher for statements, branches, functions and lines. Integration tests use separate `users-integration` and `products-integration` tables in DynamoDB Local; `test:integration` creates or validates them before running.
 
-## Observability
-
-In production applications, observability is essential for understanding how your system behaves, detecting issues early, and maintaining reliable performance.
-
-[NestJS Observe](https://observe.nestjs.com) automatically instruments your NestJS application, giving you deep visibility into your system with minimal setup:
-
-- **Distributed tracing:** Follow requests across services and understand how they flow through your system.
-- **Waterfall analysis:** Visualize request execution and identify slow operations, bottlenecks, and unexpected delays.
-- **Performance analysis:** Analyze application performance in real time and quickly pinpoint areas that need optimization.
-- **Metrics:** Track key application and infrastructure metrics to understand system health and performance trends.
-- **Logging:** Centralize and correlate logs with traces and other telemetry to make debugging easier.
-- **Error tracking:** Detect errors quickly and investigate their root causes with the surrounding context.
-- **SLA monitoring:** Track service-level objectives and identify when your application is approaching or exceeding defined thresholds.
-- **Alarms and alerts:** Set up alerts for critical errors, performance degradation, SLA violations, and other anomalies so your team can react quickly.
-
-To add it to this project, run this and approve the code it prints at [observe.nestjs.com/link](https://observe.nestjs.com/link) - signing up for free if you have no account:
+## Useful local commands
 
 ```bash
-$ npx @nestjs/observe link
+npm run dynamodb:check    # check the configured DynamoDB endpoint
+npm run dynamodb:setup    # create or validate application tables and indexes
+npm run seed              # add the local administrator and sample products
+npm run start:prod        # run the compiled application after npm run build
+docker compose down       # stop local Redis and DynamoDB
 ```
-
-It installs `@nestjs/observe`, wires it into `AppModule` and `main.ts`, and writes the app key and secret into `.env`, which every `nest start` script (`start`, `start:dev`, `start:debug`) then loads. In production, set `OBSERVE_APP_KEY` and `OBSERVE_APP_SECRET` in the environment instead.
-
-Or do it by hand:
-
-```bash
-$ npm install @nestjs/observe
-```
-
-Then follow the [setup guide](https://docs.nestjs.com/observability/sdk) - it takes a single import and an app key.
-
-The free plan needs no payment details and covers 300,000 events a month. You can also browse the [live demo](https://www.observe-demo.nestjs.com/dashboard) first - the whole dashboard over a busy service's data, with nothing to install.
-
-## Resources
-
-Check out a few resources that may come in handy when working with NestJS:
-
-- Visit the [NestJS Documentation](https://docs.nestjs.com) to learn more about the framework.
-- For questions and support, please visit our [Discord channel](https://discord.gg/G7Qnnhy).
-- To dive deeper and get more hands-on experience, check out our official video [courses](https://courses.nestjs.com/).
-- Deploy your application to AWS with the help of [NestJS Mau](https://mau.nestjs.com) in just a few clicks.
-- Auto-instrument your application with [NestJS Observe](https://observe.nestjs.com). Distributed tracing, metrics, and logging made easy. Error tracking and performance monitoring for your NestJS applications.
-- Visualize your application graph and interact with the NestJS application in real-time using [NestJS Devtools](https://devtools.nestjs.com).
-- Need help with your project (part-time to full-time)? Check out our official [enterprise support](https://enterprise.nestjs.com).
-- To stay in the loop and get updates, follow us on [X](https://x.com/nestframework) and [LinkedIn](https://linkedin.com/company/nestjs).
-- Looking for a job, or have a job to offer? Check out our official [Jobs board](https://jobs.nestjs.com).
-
-## Support
-
-Nest is an MIT-licensed open source project. It can grow thanks to the sponsors and support by the amazing backers. If you'd like to join them, please [read more here](https://docs.nestjs.com/support).
-
-## Stay in touch
-
-- Author - [Kamil Myśliwiec](https://twitter.com/kammysliwiec)
-- Website - [https://nestjs.com](https://nestjs.com/)
-- Twitter - [@nestframework](https://twitter.com/nestframework)
-
-## License
-
-Nest is [MIT licensed](https://github.com/nestjs/nest/blob/master/LICENSE).

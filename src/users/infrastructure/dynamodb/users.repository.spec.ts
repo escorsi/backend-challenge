@@ -78,4 +78,11 @@ describe('UsersRepository', () => {
 
     await expect(repository.findByEmail(user.email)).rejects.toThrow(error);
   });
+
+  it('propagates unexpected errors when creating a user', async () => {
+    const error = new Error('DynamoDB unavailable');
+    vi.mocked(documentClient.send).mockRejectedValueOnce(error);
+
+    await expect(repository.create(user)).rejects.toThrow(error);
+  });
 });
