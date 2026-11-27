@@ -106,7 +106,7 @@ export class ProductsController {
   @Post()
   @UseGuards(RolesGuard)
   @Roles(UserRole.ADMIN)
-  @Throttle({ authenticatedUser: { limit: 100, ttl: 60_000 } })
+  @Throttle({ authenticatedUser: { limit: 10, ttl: 60_000 } })
   @ApiOperation({
     summary: 'Create a product',
     description:

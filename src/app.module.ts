@@ -4,6 +4,8 @@ import { AuthModule } from './auth/auth.module';
 import { ProductsModule } from './products/products.module';
 import { validateEnv } from './config/env.validation';
 import { RateLimitModule } from './common/rate-limit/rate-limit.module';
+import { CommonModule } from './common/common.module';
+import { ActuatorModule } from './actuator/actuator.module';
 
 @Module({
   imports: [
@@ -13,6 +15,8 @@ import { RateLimitModule } from './common/rate-limit/rate-limit.module';
       validate: validateEnv,
     }),
     RateLimitModule,
+    CommonModule,
+    ActuatorModule,
     AuthModule,
     ProductsModule,
   ],

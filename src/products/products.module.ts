@@ -11,6 +11,7 @@ import { PRODUCTS_READER } from './application/ports/products-reader.port';
 import { PRODUCTS_WRITER } from './application/ports/products-writer.port';
 import { PRODUCT_CURSOR_CODEC } from './application/ports/product-cursor-codec.port';
 import { RolesGuard } from '../common/guards/roles.guard';
+import { RateLimitModule } from '../common/rate-limit/rate-limit.module';
 import type { ProductsReaderPort } from './application/ports/products-reader.port';
 import type { ProductsWriterPort } from './application/ports/products-writer.port';
 import { SystemModule } from '../shared/infrastructure/system/system.module';
@@ -23,7 +24,7 @@ import { ProductsWriterAdapter } from './infrastructure/dynamodb/products-writer
 import { ProductCursorManager } from './infrastructure/dynamodb/product-cursor.manager';
 
 @Module({
-  imports: [AuthModule, DynamoDBModule, SystemModule],
+  imports: [AuthModule, DynamoDBModule, RateLimitModule, SystemModule],
   controllers: [ProductsController],
   providers: [
     ProductCursorManager,

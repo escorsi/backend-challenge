@@ -1,24 +1,39 @@
 import { z } from 'zod';
 
-const envSchema = z.object({
-  NODE_ENV: z
-    .enum(['development', 'production', 'test'])
-    .default('development'),
+const envSchema = z
+  .object({
+    NODE_ENV: z
+      .enum(['development', 'production', 'test'])
+      .default('development'),
 
-  PORT: z.coerce.number().int().positive().default(3000),
-  REDIS_URL: z.url({ protocol: /^rediss?$/ }),
-  TRUSTED_PROXY_CIDRS: z.string().default(''),
+    PORT: z.coerce.number().int().positive().default(3000),
+    REDIS_URL: z
+      .url({ protocol: /^rediss?$/ })
+      .default('redis://localhost:6379'),
+    TRUSTED_PROXY_CIDRS: z.string().default(''),
+    METRICS_BEARER_TOKEN: z.string().min(32).optional(),
 
-  AWS_REGION: z.string().default('us-east-1'),
-  DYNAMODB_ENDPOINT: z.url().optional(),
-  DYNAMODB_USERS_TABLE: z.string().default('users'),
-  DYNAMODB_PRODUCTS_TABLE: z.string().default('products'),
+    AWS_REGION: z.string().default('us-east-1'),
+    DYNAMODB_ENDPOINT: z.url().optional(),
+    DYNAMODB_USERS_TABLE: z.string().default('users'),
+    DYNAMODB_PRODUCTS_TABLE: z.string().default('products'),
+    SEED_USER_EMAIL: z.email().optional(),
+    SEED_USER_PASSWORD: z.string().optional(),
 
-  JWT_SECRET: z.string().min(32),
-  JWT_EXPIRES_IN: z.string().default('15m'),
+    JWT_SECRET: z.string().min(32),
+    JWT_EXPIRES_IN: z.string().default('15m'),
 
-  CURSOR_SECRET: z.string().min(32),
-});
+    CURSOR_SECRET: z.string().min(32),
+  })
+  .superRefine((config, context) => {
+    if (config.NODE_ENV === 'production' && !config.METRICS_BEARER_TOKEN) {
+      context.addIssue({
+        code: 'custom',
+        path: ['METRICS_BEARER_TOKEN'],
+        message: 'METRICS_BEARER_TOKEN is required in production',
+      });
+    }
+  });
 
 export function validateEnv(config: Record<string, unknown>) {
   return envSchema.parse(config);

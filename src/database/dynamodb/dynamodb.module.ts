@@ -3,15 +3,19 @@ import { ConfigService } from '@nestjs/config';
 import { DynamoDBClient } from '@aws-sdk/client-dynamodb';
 import { DynamoDBDocumentClient } from '@aws-sdk/lib-dynamodb';
 
-import { DYNAMODB_DOCUMENT_CLIENT } from './dynamodb.constants';
+import {
+  DYNAMODB_CLIENT,
+  DYNAMODB_DOCUMENT_CLIENT,
+} from './dynamodb.constants';
 
 @Injectable()
 class DynamoDBConnection implements OnApplicationShutdown {
+  readonly client: DynamoDBClient;
   readonly documentClient: DynamoDBDocumentClient;
 
   constructor(configService: ConfigService) {
     const endpoint = configService.get<string>('DYNAMODB_ENDPOINT');
-    const client = new DynamoDBClient({
+    this.client = new DynamoDBClient({
       region: configService.getOrThrow<string>('AWS_REGION'),
       maxAttempts: 3,
       ...(endpoint && {
@@ -23,7 +27,7 @@ class DynamoDBConnection implements OnApplicationShutdown {
       }),
     });
 
-    this.documentClient = DynamoDBDocumentClient.from(client, {
+    this.documentClient = DynamoDBDocumentClient.from(this.client, {
       marshallOptions: {
         removeUndefinedValues: true,
       },
@@ -31,7 +35,7 @@ class DynamoDBConnection implements OnApplicationShutdown {
   }
 
   onApplicationShutdown(): void {
-    this.documentClient.destroy();
+    this.client.destroy();
   }
 }
 
@@ -39,11 +43,16 @@ class DynamoDBConnection implements OnApplicationShutdown {
   providers: [
     DynamoDBConnection,
     {
+      provide: DYNAMODB_CLIENT,
+      inject: [DynamoDBConnection],
+      useFactory: (connection: DynamoDBConnection) => connection.client,
+    },
+    {
       provide: DYNAMODB_DOCUMENT_CLIENT,
       inject: [DynamoDBConnection],
       useFactory: (connection: DynamoDBConnection) => connection.documentClient,
     },
   ],
-  exports: [DYNAMODB_DOCUMENT_CLIENT],
+  exports: [DYNAMODB_CLIENT, DYNAMODB_DOCUMENT_CLIENT],
 })
 export class DynamoDBModule {}
