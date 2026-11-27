@@ -5,7 +5,7 @@ import {
   ResourceNotFoundException,
   waitUntilTableExists,
 } from '@aws-sdk/client-dynamodb';
-import { PRODUCT_INDEXES } from '../src/products/infrastructure/dynamodb/constants/product-indexes.constants.js';
+import { PRODUCT_INDEXES } from '../src/products/infrastructure/dynamodb/constants/product-indexes.constants';
 
 const region = process.env.AWS_REGION ?? 'us-east-1';
 const integration = process.argv.includes('--integration');

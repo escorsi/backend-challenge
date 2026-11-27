@@ -8,7 +8,11 @@
   "scripts": {
     "build": "nest build",
     "deploy": "nest deploy",
+    "dynamodb:check": "tsx --env-file=.env scripts/check-dynamodb.ts",
+    "dynamodb:setup": "tsx --env-file=.env scripts/create-tables.ts",
+    "dynamodb:setup:integration": "tsx --env-file=.env scripts/create-tables.ts --integration",
     "format": "prettier --write \"src/**/*.ts\" \"test/**/*.ts\"",
+    "seed": "tsx --env-file=.env scripts/seed.ts",
     "start": "nest start",
     "start:dev": "nest start --watch",
     "start:debug": "nest start --debug --watch",
@@ -51,6 +55,7 @@
     "prettier": "^3.4.2",
     "source-map-support": "^0.5.21",
     "supertest": "^7.0.0",
+    "tsx": "^4.23.15",
     "typescript": "^6.0.2",
     "vite": "^8.0.0",
     "vitest": "^4.1.2"

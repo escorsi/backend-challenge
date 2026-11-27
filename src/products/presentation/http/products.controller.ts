@@ -33,7 +33,7 @@ import { ApiProductsQuery } from './decorators/api-products-query.decorator';
 import { toProductResponse } from './mappers/product-response.mapper';
 
 @ApiTags('Products')
-@ApiBearerAuth('Bearer')
+@ApiBearerAuth()
 @Controller('products')
 @UseGuards(JwtAuthGuard)
 export class ProductsController {

@@ -3,7 +3,7 @@ import { ConfigService } from '@nestjs/config';
 import { DynamoDBClient } from '@aws-sdk/client-dynamodb';
 import { DynamoDBDocumentClient } from '@aws-sdk/lib-dynamodb';
 
-import { DYNAMODB_DOCUMENT_CLIENT } from './dynamodb.constants.js';
+import { DYNAMODB_DOCUMENT_CLIENT } from './dynamodb.constants';
 
 @Injectable()
 class DynamoDBConnection implements OnApplicationShutdown {

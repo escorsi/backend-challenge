@@ -10,3 +10,5 @@ export interface AuthUserRecord {
 export interface AuthUserReader {
   findByEmail(email: string): Promise<AuthUserRecord | null>;
 }
+
+export const AUTH_USER_READER = Symbol('AUTH_USER_READER');

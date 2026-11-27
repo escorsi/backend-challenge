@@ -10,6 +10,13 @@ export interface Product {
   createdAt: string;
 }
 
+export type CreateProductParams = Product;
+
+export type CreateProductInput = Pick<
+  Product,
+  'name' | 'description' | 'priceInCents'
+> & { status: ProductStatus };
+
 export type ProductSortBy = 'createdAt' | 'name' | 'price';
 
 export type SortOrder = 'asc' | 'desc';
